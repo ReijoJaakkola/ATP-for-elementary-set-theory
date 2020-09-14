@@ -17,14 +17,16 @@
  At the core of ATPEST is that it relies on expanding definitions of set-operators and applying rules of sequential calculus.
  For example, the following is a proof of x=x.
  
+ ```
      |- x=x            
-     |- (xSx) & (xSx)  : Use the definition of =.
+     |- (xSx) & (xSx)  : Use the definition of =
  
  Case 1.               : Prove both subgoals.
      |- (xSx)          : First subgoal
      |- (!y€x | y€x)   : Use the definition of S.
      |- !y€x, y€x      : Rule for |
  y€x |- y€x            : Rule for !
+ ```
  
  This is clearly a tautology, which proves the first subgoal.
  Proof for the second subgoal is similar.
