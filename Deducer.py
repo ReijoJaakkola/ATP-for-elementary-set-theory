@@ -1,5 +1,14 @@
+from Utils import combinations
 from PropositionalSentences import CONNECTIVES, PropVariable, PropNegation, PropConjunction, PropDisjunction
 from SetTheorySentences import SETOPERATIONS, Set, SetMember, SetSubset, SetComplement, SetUnion, SetIntersection, SetEquality, SetPowerset, SetDifference
+
+def suggestFreshVariable(suggestion, reserved):
+	variableSuggestion = suggestion
+	index = 0
+	while variableSuggestion in reserved:
+		variableSuggestion += '_' + str(index)
+		index += 1
+	return variableSuggestion
 
 def calculateVariables(claim):
 	if claim.type == SETOPERATIONS.SET:
@@ -34,13 +43,6 @@ class Deducer:
 		self.assumptions = assumptions
 		self.conclusions = conclusions
 		self.depth = depth
-		
-		variables = set()
-		for assumption in self.assumptions:
-			variables = variables.union(calculateVariables(assumption))
-		for conclusion in self.conclusions:
-			variables = variables.union(calculateVariables(conclusion))
-		self.variables = variables
 
 	def printStatus(self):
 		assumptions = '{'
@@ -58,15 +60,6 @@ class Deducer:
 		conclusions += '}'
 
 		print(self.depth * '\t' + f'{assumptions} => {conclusions}')
-
-	def freshVariable(self):
-		variableSuggestion = 'x'
-		index = 0
-		while variableSuggestion in self.variables:
-			variableSuggestion += '_' + str(index)
-			index += 1
-		self.variables = self.variables.union({variableSuggestion})
-		return variableSuggestion
 
 	def isProofFinished(self):
 		# TODO: SHOULD CALCULATE TRANSITIVE CLOSURE.
@@ -92,7 +85,7 @@ class Deducer:
 
 		return False
 
-	def expandSetTheoreticalDefinitionInAssumptions(self, assumption):
+	def expandSetTheoreticalMembershipInAssumptions(self, assumption):
 		if assumption.type == SETOPERATIONS.MEMBER:
 			if assumption.set.type == SETOPERATIONS.SET:
 				return False
@@ -116,24 +109,10 @@ class Deducer:
 				self.assumptions.remove(assumption)
 				self.assumptions.append(PropConjunction(SetMember(assumption.element, assumption.set.set1),PropNegation(SetMember(assumption.element, assumption.set.set2))))
 				return True
-		elif assumption.type == SETOPERATIONS.SUBSET:
-			if assumption.set2.type == SETOPERATIONS.INTERSECTION:
-				self.assumptions.remove(assumption)
-				self.assumptions.append(PropConjunction(SetSubset(assumption.set1, assumption.set2.set1), SetSubset(assumption.set1, assumption.set2.set2)))
-				return True
-			else:
-				variable = self.freshVariable()
-				self.assumptions.remove(assumption)
-				self.assumptions.append(PropDisjunction(PropNegation(SetMember(Set(variable), assumption.set1)),SetMember(Set(variable), assumption.set2)))
-				return True
-		elif assumption.type == SETOPERATIONS.EQUALITY:
-			self.assumptions.remove(assumption)
-			self.assumptions.append(PropConjunction(SetSubset(assumption.set1,assumption.set2),SetSubset(assumption.set2, assumption.set1)))
-			return True
 		else:
 			return False
 
-	def expandSetTheoreticalDefinitionInConclusions(self, conclusion):
+	def expandSetTheoreticalMembershipInConclusions(self, conclusion):
 		if conclusion.type == SETOPERATIONS.MEMBER:
 			if conclusion.set.type == SETOPERATIONS.SET:
 				return False
@@ -157,20 +136,6 @@ class Deducer:
 				self.conclusions.remove(conclusion)
 				self.conclusions.append(PropConjunction(SetMember(conclusion.element, conclusion.set.set1),PropNegation(SetMember(conclusion.element, conclusion.set.set2))))
 				return True
-		elif conclusion.type == SETOPERATIONS.SUBSET:
-			if conclusion.set2.type == SETOPERATIONS.INTERSECTION:
-				self.conclusions.remove(conclusion)
-				self.conclusions.append(PropConjunction(SetSubset(conclusion.set1, conclusion.set2.set1), SetSubset(conclusion.set1, conclusion.set2.set2)))
-				return True
-			else:
-				variable = self.freshVariable()
-				self.conclusions.remove(conclusion)
-				self.conclusions.append(PropDisjunction(PropNegation(SetMember(Set(variable), conclusion.set1)),SetMember(Set(variable), conclusion.set2)))
-				return True
-		elif conclusion.type == SETOPERATIONS.EQUALITY:
-			self.conclusions.remove(conclusion)
-			self.conclusions.append(PropConjunction(SetSubset(conclusion.set1,conclusion.set2),SetSubset(conclusion.set2, conclusion.set1)))
-			return True
 		else:
 			return False
 
@@ -180,7 +145,7 @@ class Deducer:
 		elif claim.type == SETOPERATIONS.MEMBER:
 			return self.complexity(claim.element) + self.complexity(claim.set) + 1
 		elif claim.type == SETOPERATIONS.SUBSET:
-			return self.complexity(claim.set1) + self.complexity(claim.set2) + 1
+			return self.complexity(claim.set1) + self.complexity(claim.set2)
 		elif claim.type == SETOPERATIONS.COMPLEMENT:
 			return self.complexity(claim.set) + 1
 		elif claim.type == SETOPERATIONS.UNION:
@@ -188,7 +153,7 @@ class Deducer:
 		elif claim.type == SETOPERATIONS.INTERSECTION:
 			return self.complexity(claim.set1) + self.complexity(claim.set2) + 1
 		elif claim.type == SETOPERATIONS.EQUALITY:
-			return self.complexity(claim.set1) + self.complexity(claim.set2) + 1
+			return self.complexity(claim.set1) + self.complexity(claim.set2)
 		elif claim.type == SETOPERATIONS.POWERSET:
 			return self.complexity(claim.set) + 1
 		elif claim.type == SETOPERATIONS.DIFFERENCE:
@@ -202,7 +167,7 @@ class Deducer:
 		else:
 			raise Exception('Error: Unrecognized claim type.')
 
-	def expandSetTheoreticalDefinition(self):
+	def expandSetTheoreticalMembership(self):
 		assumptionsCopy = self.assumptions.copy()
 		conclusionsCopy = self.conclusions.copy()
 		definitions = []
@@ -213,9 +178,9 @@ class Deducer:
 
 		definitions.sort(key = lambda claim : self.complexity(claim[1]))
 		if definitions[-1][0] == 1:
-			result = self.expandSetTheoreticalDefinitionInAssumptions(definitions[-1][1])
+			result = self.expandSetTheoreticalMembershipInAssumptions(definitions[-1][1])
 		else:
-			result = self.expandSetTheoreticalDefinitionInConclusions(definitions[-1][1])
+			result = self.expandSetTheoreticalMembershipInConclusions(definitions[-1][1])
 		return result
 
 	def expandEquality(self):
@@ -314,6 +279,88 @@ class Deducer:
 		# No cases left to consider.
 		return False
 
+	def expandSubsetRelationsInConclusions(self):
+		# First calculate what variables already appear in the conclusions and in the assumptions.
+		reservedVariables = set()
+		for assumption in self.assumptions:
+			reservedVariables = reservedVariables.union(calculateVariables(assumption))
+		for conclusion in self.conclusions:
+			reservedVariables = reservedVariables.union(calculateVariables(conclusion))
+
+		# Collect all the relevant conclusions.
+		relevantConclusions = []
+		for conclusion in self.conclusions:
+			if conclusion.type == SETOPERATIONS.SUBSET:
+				relevantConclusions.append(conclusion)
+		
+		if len(relevantConclusions) == 0:
+			# No subset relations to expand.
+			return False
+
+		for conclusion in relevantConclusions:
+			freshVariable = suggestFreshVariable('x', reservedVariables)
+			reservedVariables = reservedVariables.union({freshVariable})
+
+			self.conclusions.remove(conclusion)
+			self.conclusions.append(PropDisjunction(PropNegation(SetMember(Set(freshVariable), conclusion.set1)),SetMember(Set(freshVariable), conclusion.set2)))
+
+		return True
+
+	def doWeHaveSubsetRelationsInAssumptions(self):
+		for assumption in self.assumptions:
+			if assumption.type == SETOPERATIONS.SUBSET:
+				return True
+		return False
+
+	def considerDifferentVariables(self):
+		# First calculate what assumptions are subset relations.
+		relevantAssumptions = []
+		for assumption in self.assumptions:
+			if assumption.type == SETOPERATIONS.SUBSET:
+				relevantAssumptions.append(assumption)
+
+		if len(relevantAssumptions) == 0:
+			# No subset relations among the assumptions.
+			return False
+
+		# Calculate the variables occuring in the assumptions and in the conclusions.
+		freeVariables = set()
+		for assumption in self.assumptions:
+			freeVariables = freeVariables.union(calculateVariables(assumption))
+		for conclusion in self.conclusions:
+			freeVariables = freeVariables.union(calculateVariables(conclusion))
+
+		# Form all the combinations of freeVariables of length len(relevantAssumptions),
+		# and check whether any of them works.
+		combs = combinations(len(relevantAssumptions), list(freeVariables))
+		valid = False
+		for combination in combs:
+			assumptionsCopy = self.assumptions.copy()
+			
+			validCombination = True
+			for i in range(len(relevantAssumptions)):
+				if len(calculateVariables(relevantAssumptions[i]).intersection(set(combination))) == 0:
+					assumptionsCopy.remove(relevantAssumptions[i])
+					assumptionsCopy.append(PropDisjunction(PropNegation(SetMember(Set(combination[i]), relevantAssumptions[i].set1)),SetMember(Set(combination[i]), relevantAssumptions[i].set2)))
+				else:
+					validCombination = False
+					break
+			
+			if validCombination == True:
+				# Initialize a deducer for this case.
+				deducer = Deducer(assumptionsCopy, self.conclusions.copy(), self.depth + 1)
+
+				# Run the deducer.
+				print(self.depth * '\t' + f'Expanding with variables {combination}:')
+				valid = deducer.prove()
+
+				if valid == True:
+					# We found a valid combination, so no need to continue.
+					return True
+
+		# None of the combinations worked.
+		return False
+
 	def prove(self):
 		self.printStatus()
 		
@@ -350,8 +397,8 @@ class Deducer:
 				valid = True
 				break
 
-			# Expand a single set-theoretic definition.
-			result3 = self.expandSetTheoreticalDefinition()
+			# Expand a single set-theoretic membership.
+			result3 = self.expandSetTheoreticalMembership()
 			if result3 == True:
 				self.printStatus()
 				if self.isProofFinished():
@@ -359,21 +406,44 @@ class Deducer:
 					break
 
 			if result1 == False and result2 == False and result3 == False:
-				# No more expanding left to do.
 				done = True
 
 		if valid == True:
-			# The proof was finished by expanding definitions.
+			# The proof was finished by expanding logical definitions and memberships.
 			return True
-
-		# The claim has not been proven, but we also have
-		# no definitions left to expand. Try to find if we can
-		# begin considering cases.
+		
+		# There are no more logical definitions that can be expanded, nor are there
+		# memberships between sets that could be expanded. Try to see if we can proceed
+		# by considering different cases (i.e. check whether assumption contains something like A or B,
+		# or that conclusion contains something like A and B.)
 		valid = self.considerCases()
-
 		if valid == True:
 			# The claim was proved by studying cases.
 			return True
+
+		# Only thing that can be remaining now is subset relations between sets.
+		# What we do now is that we will expand all the subset relations in the conclusions.
+		# This will be done by using the definition of subset relation
+		# x S y <=> For all z, z € x -> z € y.
+		# Each time we expand a subset relation a fresh variable will be introduced. These will
+		# be collected as the active variables.
+		result = self.expandSubsetRelationsInConclusions()
+
+		if self.doWeHaveSubsetRelationsInAssumptions():
+			# Go trough all the subset relations in the assumptions, and try to
+			# expand them with all the possible combinations for freshVariables.
+			valid = self.considerDifferentVariables()
+			if valid == True:
+				# We succeeded in proving the claim.
+				return True
+		elif result == True:
+			# We have expanded subset relations in the definitions, 
+			# but there are no assumptions. Only thing we can do now is
+			# to try to prove the claim with the fresh conclusions.
+			valid = self.prove()
+			if valid == True:
+				# We succeeded in proving the claim.
+				return True
 
 		# Nothing left to do, and the claim has not been proven.
 		# Thus the claim is false.
