@@ -219,10 +219,8 @@ class Deducer:
 
 				# Run the deducer.
 				print(self.depth * '\t' + f'First subcase:')
-				deducer1.printStatus()
 				result1 = deducer1.prove()
 				print(self.depth * '\t' + f'Second subcase:')
-				deducer2.printStatus()
 				result2 = deducer2.prove()
 				return result1 and result2
 
@@ -230,10 +228,25 @@ class Deducer:
 		return False
 
 	def prove(self):
+		self.printStatus()
+		
 		valid = False
 		done = False
 		while not done:
 			if self.isProofFinished():
+				valid = True
+				break
+
+			# Expand logical definitions.
+			result3 = False
+			while True:
+				if self.expandLogicalDefinition():
+					self.printStatus()
+					result3 = True
+				else:
+					break
+
+			if result3 == True and self.isProofFinished():
 				valid = True
 				break
 
@@ -260,19 +273,6 @@ class Deducer:
 					break
 
 			if result2 == True and self.isProofFinished():
-				valid = True
-				break
-
-			# Expand logical definitions.
-			result3 = False
-			while True:
-				if self.expandLogicalDefinition():
-					self.printStatus()
-					result3 = True
-				else:
-					break
-
-			if result3 == True and self.isProofFinished():
 				valid = True
 				break
 
