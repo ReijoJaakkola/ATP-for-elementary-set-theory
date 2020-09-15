@@ -60,11 +60,12 @@ class Deducer:
 		print(self.depth * '\t' + f'{assumptions} => {conclusions}')
 
 	def freshVariable(self):
-		variableSuggestion = 'x0'
+		variableSuggestion = 'x'
 		index = 0
 		while variableSuggestion in self.variables:
 			variableSuggestion += '_' + str(index)
 			index += 1
+		self.variables = self.variables.union({variableSuggestion})
 		return variableSuggestion
 
 	def isProofFinished(self):
@@ -74,75 +75,102 @@ class Deducer:
 						return True
 		return False
 
-	def expandSetTheoreticalMembership(self):
-		for assumption in self.assumptions:
-			if assumption.type == SETOPERATIONS.MEMBER:
-				if assumption.set.type == SETOPERATIONS.COMPLEMENT:
-					self.assumptions.remove(assumption)
-					self.assumptions.append(PropNegation(SetMember(assumption.element, assumption.set.set)))
-					return True
-				elif assumption.set.type == SETOPERATIONS.UNION:
-					self.assumptions.remove(assumption)
-					self.assumptions.append(PropDisjunction(SetMember(assumption.element, assumption.set.set1),SetMember(assumption.element, assumption.set.set2)))
-					return True
-				elif assumption.set.type == SETOPERATIONS.INTERSECTION:
-					self.assumptions.remove(assumption)
-					self.assumptions.append(PropConjunction(SetMember(assumption.element, assumption.set.set1),SetMember(assumption.element, assumption.set.set2)))
-					return True
-				elif assumption.set.type == SETOPERATIONS.POWERSET:
-					self.assumptions.remove(assumption)
-					self.assumptions.append(SetSubset(assumption.element, assumption.set.set))
-				elif assumption.set.type == SETOPERATIONS.DIFFERENCE:
-					self.assumptions.remove(assumption)
-					self.assumptions.append(PropConjunction(SetMember(assumption.element, assumption.set.set1),PropNegation(SetMember(assumption.element, assumption.set.set2))))
-					return True
-
-		for conclusion in self.conclusions:
-			if conclusion.type == SETOPERATIONS.MEMBER:
-				if conclusion.set.type == SETOPERATIONS.COMPLEMENT:
-					self.conclusions.remove(conclusion)
-					self.conclusions.append(PropNegation(SetMember(conclusion.element, conclusion.set.set)))
-					return True
-				elif conclusion.set.type == SETOPERATIONS.UNION:
-					self.conclusions.remove(conclusion)
-					self.conclusions.append(PropDisjunction(SetMember(conclusion.element, conclusion.set.set1),SetMember(conclusion.element, conclusion.set.set2)))
-					return True
-				elif conclusion.set.type == SETOPERATIONS.INTERSECTION:
-					self.conclusions.remove(conclusion)
-					self.conclusions.append(PropConjunction(SetMember(conclusion.element, conclusion.set.set1),SetMember(conclusion.element, conclusion.set.set2)))
-					return True
-				elif conclusion.set.type == SETOPERATIONS.POWERSET:
-					self.conclusions.remove(conclusion)
-					self.conclusions.append(SetSubset(conclusion.element, conclusion.set.set))
-				elif conclusion.set.type == SETOPERATIONS.DIFFERENCE:
-					self.conclusions.remove(conclusion)
-					self.conclusions.append(PropConjunction(SetMember(conclusion.element, conclusion.set.set1),PropNegation(SetMember(conclusion.element, conclusion.set.set2))))
-					return True
-
-		return False
-
-	def expandSetTheoreticalRelation(self):
-		for assumption in self.assumptions:
-			if assumption.type == SETOPERATIONS.SUBSET:
+	def expandSetTheoreticalDefinitionInAssumptions(self, assumption):
+		if assumption.type == SETOPERATIONS.MEMBER:
+			if assumption.set.type == SETOPERATIONS.COMPLEMENT:
 				self.assumptions.remove(assumption)
+				self.assumptions.append(PropNegation(SetMember(assumption.element, assumption.set.set)))
+				return True
+			elif assumption.set.type == SETOPERATIONS.UNION:
+				self.assumptions.remove(assumption)
+				self.assumptions.append(PropDisjunction(SetMember(assumption.element, assumption.set.set1),SetMember(assumption.element, assumption.set.set2)))
+				return True
+			elif assumption.set.type == SETOPERATIONS.INTERSECTION:
+				self.assumptions.remove(assumption)
+				self.assumptions.append(PropConjunction(SetMember(assumption.element, assumption.set.set1),SetMember(assumption.element, assumption.set.set2)))
+				return True
+			elif assumption.set.type == SETOPERATIONS.POWERSET:
+				self.assumptions.remove(assumption)
+				self.assumptions.append(SetSubset(assumption.element, assumption.set.set))
+				return True
+			elif assumption.set.type == SETOPERATIONS.DIFFERENCE:
+				self.assumptions.remove(assumption)
+				self.assumptions.append(PropConjunction(SetMember(assumption.element, assumption.set.set1),PropNegation(SetMember(assumption.element, assumption.set.set2))))
+				return True
+		elif assumption.type == SETOPERATIONS.SUBSET:
+			if assumption.set2.type == SETOPERATIONS.INTERSECTION:
+				self.assumptions.remove(assumption)
+				self.assumptions.append(PropConjunction(SetSubset(assumption.set1, assumption.set2.set1), SetSubset(assumption.set1, assumption.set2.set2)))
+				return True
+			else:
 				variable = self.freshVariable()
+				self.assumptions.remove(assumption)
 				self.assumptions.append(PropDisjunction(PropNegation(SetMember(Set(variable), assumption.set1)),SetMember(Set(variable), assumption.set2)))
 				return True
-			elif assumption.type == SETOPERATIONS.EQUALITY:
-				self.assumptions.remove(assumption)
-				self.assumptions.append(PropConjunction(SetSubset(assumption.set1,assumption.set2),SetSubset(assumption.set2, assumption.set1)))
-				return True
+		elif assumption.type == SETOPERATIONS.EQUALITY:
+			self.assumptions.remove(assumption)
+			self.assumptions.append(PropConjunction(SetSubset(assumption.set1,assumption.set2),SetSubset(assumption.set2, assumption.set1)))
+			return True
+		else:
+			return False
 
-		for conclusion in self.conclusions:
-			if conclusion.type == SETOPERATIONS.SUBSET:
+	def expandSetTheoreticalDefinitionInConclusions(self, conclusion):
+		if conclusion.type == SETOPERATIONS.MEMBER:
+			if conclusion.set.type == SETOPERATIONS.COMPLEMENT:
 				self.conclusions.remove(conclusion)
+				self.conclusions.append(PropNegation(SetMember(conclusion.element, conclusion.set.set)))
+				return True
+			elif conclusion.set.type == SETOPERATIONS.UNION:
+				self.conclusions.remove(conclusion)
+				self.conclusions.append(PropDisjunction(SetMember(conclusion.element, conclusion.set.set1),SetMember(conclusion.element, conclusion.set.set2)))
+				return True
+			elif conclusion.set.type == SETOPERATIONS.INTERSECTION:
+				self.conclusions.remove(conclusion)
+				self.conclusions.append(PropConjunction(SetMember(conclusion.element, conclusion.set.set1),SetMember(conclusion.element, conclusion.set.set2)))
+				return True
+			elif conclusion.set.type == SETOPERATIONS.POWERSET:
+				self.conclusions.remove(conclusion)
+				self.conclusions.append(SetSubset(conclusion.element, conclusion.set.set))
+				return True
+			elif conclusion.set.type == SETOPERATIONS.DIFFERENCE:
+				self.conclusions.remove(conclusion)
+				self.conclusions.append(PropConjunction(SetMember(conclusion.element, conclusion.set.set1),PropNegation(SetMember(conclusion.element, conclusion.set.set2))))
+				return True
+		elif conclusion.type == SETOPERATIONS.SUBSET:
+			if conclusion.set2.type == SETOPERATIONS.INTERSECTION:
+				self.conclusions.remove(conclusion)
+				self.conclusions.append(PropConjunction(SetSubset(conclusion.set1, conclusion.set2.set1), SetSubset(conclusion.set1, conclusion.set2.set2)))
+				return True
+			else:
 				variable = self.freshVariable()
+				self.conclusions.remove(conclusion)
 				self.conclusions.append(PropDisjunction(PropNegation(SetMember(Set(variable), conclusion.set1)),SetMember(Set(variable), conclusion.set2)))
 				return True
-			elif conclusion.type == SETOPERATIONS.EQUALITY:
-				self.conclusions.remove(conclusion)
-				self.conclusions.append(PropConjunction(SetSubset(conclusion.set1,conclusion.set2),SetSubset(conclusion.set2, conclusion.set1)))
-				return True
+		elif conclusion.type == SETOPERATIONS.EQUALITY:
+			self.conclusions.remove(conclusion)
+			self.conclusions.append(PropConjunction(SetSubset(conclusion.set1,conclusion.set2),SetSubset(conclusion.set2, conclusion.set1)))
+			return True
+		else:
+			return False
+
+	def expandSetTheoreticalDefinition(self):
+		assumptionsCopy = self.assumptions.copy()
+		assumptionsCopy.sort(key = lambda claim : len(str(claim)))
+		assumptionsCopy.reverse()
+
+		conclusionsCopy = self.conclusions.copy()
+		conclusionsCopy.sort(key = lambda claim : len(str(claim)))
+		conclusionsCopy.reverse()
+
+		if len(assumptionsCopy) == 0:
+			return self.expandSetTheoreticalDefinitionInConclusions(conclusionsCopy[0])
+		elif len(conclusionsCopy) == 0:
+			return self.expandSetTheoreticalDefinitionInAssumptions(assumptionsCopy[0])
+		else:
+			if len(str(assumptionsCopy[0])) > len(str(conclusionsCopy[0])):
+				return self.expandSetTheoreticalDefinitionInAssumptions(assumptionsCopy[0])
+			else:
+				return self.expandSetTheoreticalDefinitionInConclusions(conclusionsCopy[0])
 
 	def expandLogicalDefinition(self):
 		for assumption in self.assumptions:
@@ -248,7 +276,7 @@ class Deducer:
 				valid = True
 				break
 
-			# Expand logical definitions.
+			# Expand all logical definitions.
 			result1 = False
 			while True:
 				if self.expandLogicalDefinition():
@@ -261,33 +289,15 @@ class Deducer:
 				valid = True
 				break
 
-			# Expand all the memberships.
-			result2 = False
-			while True:
-				if self.expandSetTheoreticalMembership():
-					self.printStatus()
-					result2 = True
-				else:
+			# Expand a single set-theoretic definition.
+			result2 = self.expandSetTheoreticalDefinition()
+			if result2 == True:
+				self.printStatus()
+				if self.isProofFinished():
+					valid = True
 					break
 
-			if result2 == True and self.isProofFinished():
-				valid = True
-				break
-
-			# Expand all the relations.
-			result3 = False
-			while True:
-				if self.expandSetTheoreticalRelation():
-					self.printStatus()
-					result3 = True
-				else:
-					break
-
-			if result3 == True and self.isProofFinished():
-				valid = True
-				break
-
-			if result1 == False and result2 == False and result3 == False:
+			if result1 == False and result2 == False:
 				# No more expanding left to do.
 				done = True
 
