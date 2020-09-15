@@ -73,6 +73,17 @@ class Deducer:
 				for conclusion in self.conclusions:
 					if assumption == conclusion:
 						return True
+
+		for assumption1 in self.assumptions:
+			for assumption2 in self.assumptions:
+				if assumption1.type == SETOPERATIONS.MEMBER and assumption2.type == SETOPERATIONS.MEMBER and assumption1 != assumption2:
+					if assumption1.set == assumption2.element:
+						if SetMember(assumption1.element, assumption2.set) in self.conclusions:
+							return True
+				elif assumption1.type == SETOPERATIONS.SUBSET and assumption2.type == SETOPERATIONS.SUBSET and assumption1 != assumption2:
+					if assumption1.set2 == assumption2.set1:
+						if SetSubset(assumption1.set1, assumption2.set2) in self.conclusions:
+							return True
 		return False
 
 	def expandSetTheoreticalDefinitionInAssumptions(self, assumption):
@@ -204,6 +215,19 @@ class Deducer:
 			else:
 				return self.expandSetTheoreticalDefinitionInConclusions(conclusionsCopy[0])
 
+	def expandEquality(self):
+		for assumption in self.assumptions:
+			if assumption.type == SETOPERATIONS.EQUALITY:
+				self.assumptions.remove(assumption)
+				self.assumptions.append(PropConjunction(SetSubset(assumption.set1,assumption.set2),SetSubset(assumption.set2, assumption.set1)))
+				return True
+		for conclusion in self.conclusions:
+			if conclusion.type == SETOPERATIONS.EQUALITY:
+				self.conclusions.remove(conclusion)
+				self.conclusions.append(PropConjunction(SetSubset(conclusion.set1,conclusion.set2),SetSubset(conclusion.set2, conclusion.set1)))
+				return True
+		return False
+
 	def expandLogicalDefinition(self):
 		for assumption in self.assumptions:
 			if assumption.type == CONNECTIVES.NEG:
@@ -237,17 +261,6 @@ class Deducer:
 
 		# Failed to expand definitions, return false to indicate this.
 		return False
-
-	def applyTransitivity(self):
-		newAssumptions = []
-		for assumption1 in self.assumptions:
-			for assumption2 in self.assumptions:
-				if assumption1.type == SETOPERATIONS.MEMBER and assumption2.type == SETOPERATIONS.MEMBER:
-					if assumption1.set == assumption2.element:
-						newAssumptions.append(SetMember(assumption1.element, assumption2.set))
-		for newAssumption in newAssumptions:
-			self.assumptions.append(newAssumption)
-		return len(newAssumptions) > 0
 
 	def considerCases(self):
 		for assumption in self.assumptions:
@@ -321,28 +334,34 @@ class Deducer:
 				valid = True
 				break
 
+			# Expand all equalities.
+			result2 = False
+			while True:
+				if self.expandEquality():
+					self.printStatus()
+					result2 = True
+				else:
+					break
+
+			if result2 == True and self.isProofFinished():
+				valid = True
+				break
+
 			# Expand a single set-theoretic definition.
-			result2 = self.expandSetTheoreticalDefinition()
-			if result2 == True:
+			result3 = self.expandSetTheoreticalDefinition()
+			if result3 == True:
 				self.printStatus()
 				if self.isProofFinished():
 					valid = True
 					break
 
-			if result1 == False and result2 == False:
+			if result1 == False and result2 == False and result3 == False:
 				# No more expanding left to do.
 				done = True
 
 		if valid == True:
 			# The proof was finished by expanding definitions.
 			return True
-
-		# Try to apply the transitivity of €.
-		if self.applyTransitivity():
-			self.printStatus()
-			if self.isProofFinished():
-				# Applying transitivity sufficed.
-				return True
 
 		# The claim has not been proven, but we also have
 		# no definitions left to expand. Try to find if we can
