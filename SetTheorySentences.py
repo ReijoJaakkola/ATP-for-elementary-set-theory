@@ -10,6 +10,7 @@ class SETOPERATIONS(Enum):
 	INTERSECTION = 11
 	EQUALITY = 12
 	POWERSET = 13
+	DIFFERENCE = 14
 
 class Set:
 	def __init__(self, set):
@@ -101,7 +102,19 @@ class SetPowerset:
 	def __eq__(self, other):
 		return str(self) == str(other)
 
-SETOPERATORS = ['C','U','I','P']
+class SetDifference:
+	def __init__(self, set1, set2):
+		self.type = SETOPERATIONS.DIFFERENCE
+		self.set1 = set1
+		self.set2 = set2
+
+	def __str__(self):
+		return f'({self.set1}\\{self.set2})'
+
+	def __eq__(self, other):
+		return str(self) == str(other)
+
+SETOPERATORS = ['C','U','I','P','\\']
 
 class SetParser:
 	def __init__(self, input):
@@ -113,7 +126,7 @@ class SetParser:
 	def precedenceForOperator(self, operator):
 		if operator == 'C' or operator == 'P':
 			return 0
-		elif operator == 'U' or operator == 'I':
+		elif operator == 'U' or operator == 'I' or operator == '\\':
 			return 1
 		else:
 			raise Exception('Error: Unrecognized operator.')
@@ -162,6 +175,10 @@ class SetParser:
 			self.output.append(SetIntersection(operand2, operand1))
 		elif operator == 'P':
 			self.output.append(SetPowerset(self.output.pop()))
+		elif operator == '\\':
+			operand1 = self.output.pop()
+			operand2 = self.output.pop()
+			self.output.append(SetDifference(operand2, operand1))
 		else:
 			raise Exception('Error: When adding a new operator, unexpected operator occured.')
 
