@@ -428,22 +428,21 @@ class Deducer:
 		# Each time we expand a subset relation a fresh variable will be introduced. These will
 		# be collected as the active variables.
 		result = self.expandSubsetRelationsInConclusions()
-
-		if self.doWeHaveSubsetRelationsInAssumptions():
-			# Go trough all the subset relations in the assumptions, and try to
-			# expand them with all the possible combinations for freshVariables.
-			valid = self.considerDifferentVariables()
-			if valid == True:
-				# We succeeded in proving the claim.
-				return True
-		elif result == True:
+		if result == True:
 			# We have expanded subset relations in the definitions, 
-			# but there are no assumptions. Only thing we can do now is
-			# to try to prove the claim with the fresh conclusions.
+			# so try to prove the claim now with the fresh conclusions.
 			valid = self.prove()
 			if valid == True:
 				# We succeeded in proving the claim.
 				return True
+		else:
+			if self.doWeHaveSubsetRelationsInAssumptions():
+				# Go trough all the subset relations in the assumptions, and try to
+				# expand them with all the possible combinations for freshVariables.
+				valid = self.considerDifferentVariables()
+				if valid == True:
+					# We succeeded in proving the claim.
+					return True
 
 		# Nothing left to do, and the claim has not been proven.
 		# Thus the claim is false.
