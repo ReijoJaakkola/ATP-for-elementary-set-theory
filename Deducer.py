@@ -337,26 +337,20 @@ class Deducer:
 		for combination in combs:
 			assumptionsCopy = self.assumptions.copy()
 			
-			validCombination = True
 			for i in range(len(relevantAssumptions)):
-				if len(calculateVariables(relevantAssumptions[i]).intersection(set(combination))) == 0:
-					assumptionsCopy.remove(relevantAssumptions[i])
-					assumptionsCopy.append(PropDisjunction(PropNegation(SetMember(Set(combination[i]), relevantAssumptions[i].set1)),SetMember(Set(combination[i]), relevantAssumptions[i].set2)))
-				else:
-					validCombination = False
-					break
+				assumptionsCopy.remove(relevantAssumptions[i])
+				assumptionsCopy.append(PropDisjunction(PropNegation(SetMember(Set(combination[i]), relevantAssumptions[i].set1)),SetMember(Set(combination[i]), relevantAssumptions[i].set2)))
 			
-			if validCombination == True:
-				# Initialize a deducer for this case.
-				deducer = Deducer(assumptionsCopy, self.conclusions.copy(), self.depth + 1)
+			# Initialize a deducer for this case.
+			deducer = Deducer(assumptionsCopy, self.conclusions.copy(), self.depth + 1)
 
-				# Run the deducer.
-				print(self.depth * '\t' + f'Expanding with variables {combination}:')
-				valid = deducer.prove()
+			# Run the deducer.
+			print(self.depth * '\t' + f'Expanding with variables {combination}:')
+			valid = deducer.prove()
 
-				if valid == True:
-					# We found a valid combination, so no need to continue.
-					return True
+			if valid == True:
+				# We found a valid combination, so no need to continue.
+				return True
 
 		# None of the combinations worked.
 		return False
