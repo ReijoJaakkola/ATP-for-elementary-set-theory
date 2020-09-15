@@ -77,7 +77,9 @@ class Deducer:
 
 	def expandSetTheoreticalDefinitionInAssumptions(self, assumption):
 		if assumption.type == SETOPERATIONS.MEMBER:
-			if assumption.set.type == SETOPERATIONS.COMPLEMENT:
+			if assumption.set.type == SETOPERATIONS.SET:
+				return False
+			elif assumption.set.type == SETOPERATIONS.COMPLEMENT:
 				self.assumptions.remove(assumption)
 				self.assumptions.append(PropNegation(SetMember(assumption.element, assumption.set.set)))
 				return True
@@ -116,7 +118,9 @@ class Deducer:
 
 	def expandSetTheoreticalDefinitionInConclusions(self, conclusion):
 		if conclusion.type == SETOPERATIONS.MEMBER:
-			if conclusion.set.type == SETOPERATIONS.COMPLEMENT:
+			if conclusion.set.type == SETOPERATIONS.SET:
+				return False
+			elif conclusion.set.type == SETOPERATIONS.COMPLEMENT:
 				self.conclusions.remove(conclusion)
 				self.conclusions.append(PropNegation(SetMember(conclusion.element, conclusion.set.set)))
 				return True
@@ -153,13 +157,41 @@ class Deducer:
 		else:
 			return False
 
+	def complexity(self, claim):
+		if claim.type == SETOPERATIONS.SET:
+			return 1
+		elif claim.type == SETOPERATIONS.MEMBER:
+			return self.complexity(claim.element) + self.complexity(claim.set) + 1
+		elif claim.type == SETOPERATIONS.SUBSET:
+			return self.complexity(claim.set1) + self.complexity(claim.set2) + 1
+		elif claim.type == SETOPERATIONS.COMPLEMENT:
+			return self.complexity(claim.set) + 1
+		elif claim.type == SETOPERATIONS.UNION:
+			return self.complexity(claim.set1) + self.complexity(claim.set2) + 1
+		elif claim.type == SETOPERATIONS.INTERSECTION:
+			return self.complexity(claim.set1) + self.complexity(claim.set2) + 1
+		elif claim.type == SETOPERATIONS.EQUALITY:
+			return self.complexity(claim.set1) + self.complexity(claim.set2) + 1
+		elif claim.type == SETOPERATIONS.POWERSET:
+			return self.complexity(claim.set) + 1
+		elif claim.type == SETOPERATIONS.DIFFERENCE:
+			return self.complexity(claim.set1) + self.complexity(claim.set2) + 1
+		elif claim.type == CONNECTIVES.NEG:
+			return self.complexity(claim.subformula)
+		elif claim.type == CONNECTIVES.AND:
+			return self.complexity(claim.subformula1) + self.complexity(claim.subformula2)
+		elif claim.type == CONNECTIVES.OR:
+			return self.complexity(claim.subformula1) + self.complexity(claim.subformula2)
+		else:
+			raise Exception('Error: Unrecognized claim type.')
+
 	def expandSetTheoreticalDefinition(self):
 		assumptionsCopy = self.assumptions.copy()
-		assumptionsCopy.sort(key = lambda claim : len(str(claim)))
+		assumptionsCopy.sort(key = lambda claim : self.complexity(claim))
 		assumptionsCopy.reverse()
 
 		conclusionsCopy = self.conclusions.copy()
-		conclusionsCopy.sort(key = lambda claim : len(str(claim)))
+		conclusionsCopy.sort(key = lambda claim : self.complexity(claim))
 		conclusionsCopy.reverse()
 
 		if len(assumptionsCopy) == 0:
@@ -167,7 +199,7 @@ class Deducer:
 		elif len(conclusionsCopy) == 0:
 			return self.expandSetTheoreticalDefinitionInAssumptions(assumptionsCopy[0])
 		else:
-			if len(str(assumptionsCopy[0])) > len(str(conclusionsCopy[0])):
+			if self.complexity(assumptionsCopy[0]) > self.complexity(conclusionsCopy[0]):
 				return self.expandSetTheoreticalDefinitionInAssumptions(assumptionsCopy[0])
 			else:
 				return self.expandSetTheoreticalDefinitionInConclusions(conclusionsCopy[0])
