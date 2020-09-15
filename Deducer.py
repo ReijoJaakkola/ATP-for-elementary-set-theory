@@ -178,6 +178,17 @@ class Deducer:
 		# Failed to expand definitions, return false to indicate this.
 		return False
 
+	def applyTransitivity(self):
+		newAssumptions = []
+		for assumption1 in self.assumptions:
+			for assumption2 in self.assumptions:
+				if assumption1.type == SETOPERATIONS.MEMBER and assumption2.type == SETOPERATIONS.MEMBER:
+					if assumption1.set == assumption2.element:
+						newAssumptions.append(SetMember(assumption1.element, assumption2.set))
+		for newAssumption in newAssumptions:
+			self.assumptions.append(newAssumption)
+		return len(newAssumptions) > 0
+
 	def considerCases(self):
 		for assumption in self.assumptions:
 			if assumption.type == CONNECTIVES.OR:
@@ -238,22 +249,9 @@ class Deducer:
 				break
 
 			# Expand logical definitions.
-			result3 = False
-			while True:
-				if self.expandLogicalDefinition():
-					self.printStatus()
-					result3 = True
-				else:
-					break
-
-			if result3 == True and self.isProofFinished():
-				valid = True
-				break
-
-			# Expand all the memberships.
 			result1 = False
 			while True:
-				if self.expandSetTheoreticalMembership():
+				if self.expandLogicalDefinition():
 					self.printStatus()
 					result1 = True
 				else:
@@ -263,16 +261,29 @@ class Deducer:
 				valid = True
 				break
 
-			# Expand all the relations.
+			# Expand all the memberships.
 			result2 = False
 			while True:
-				if self.expandSetTheoreticalRelation():
+				if self.expandSetTheoreticalMembership():
 					self.printStatus()
 					result2 = True
 				else:
 					break
 
 			if result2 == True and self.isProofFinished():
+				valid = True
+				break
+
+			# Expand all the relations.
+			result3 = False
+			while True:
+				if self.expandSetTheoreticalRelation():
+					self.printStatus()
+					result3 = True
+				else:
+					break
+
+			if result3 == True and self.isProofFinished():
 				valid = True
 				break
 
@@ -283,6 +294,13 @@ class Deducer:
 		if valid == True:
 			# The proof was finished by expanding definitions.
 			return True
+
+		# Try to apply the transitivity of €.
+		if self.applyTransitivity():
+			self.printStatus()
+			if self.isProofFinished():
+				# Applying transitivity sufficed.
+				return True
 
 		# The claim has not been proven, but we also have
 		# no definitions left to expand. Try to find if we can
