@@ -445,5 +445,5 @@ class Deducer:
 					return True
 
 		# Nothing left to do, and the claim has not been proven.
-		# Thus the claim is false.
+		# Could not find a proof.
 		return False
