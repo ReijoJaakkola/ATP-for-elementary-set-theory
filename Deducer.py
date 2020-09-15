@@ -69,6 +69,7 @@ class Deducer:
 		return variableSuggestion
 
 	def isProofFinished(self):
+		# TODO: SHOULD CALCULATE TRANSITIVE CLOSURE.
 		for assumption in self.assumptions:
 				for conclusion in self.conclusions:
 					if assumption == conclusion:
@@ -84,6 +85,11 @@ class Deducer:
 					if assumption1.set2 == assumption2.set1:
 						if SetSubset(assumption1.set1, assumption2.set2) in self.conclusions:
 							return True
+				elif assumption1.type == SETOPERATIONS.MEMBER and assumption2.type == SETOPERATIONS.SUBSET and assumption1 != assumption2:
+					if assumption1.set == assumption2.set1:
+						if SetMember(assumption1.element, assumption2.set2) in self.conclusions:
+							return True
+
 		return False
 
 	def expandSetTheoreticalDefinitionInAssumptions(self, assumption):
