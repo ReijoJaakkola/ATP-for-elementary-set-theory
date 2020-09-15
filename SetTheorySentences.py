@@ -9,6 +9,7 @@ class SETOPERATIONS(Enum):
 	UNION = 10
 	INTERSECTION = 11
 	EQUALITY = 12
+	POWERSET = 13
 
 class Set:
 	def __init__(self, set):
@@ -89,7 +90,18 @@ class SetEquality:
 	def __eq__(self, other):
 		return str(self) == str(other)
 
-SETOPERATORS = ['C','U','I']
+class SetPowerset:
+	def __init__(self, set):
+		self.type = SETOPERATIONS.POWERSET
+		self.set = set
+
+	def __str__(self):
+		return f'P{self.set}'
+
+	def __eq__(self, other):
+		return str(self) == str(other)
+
+SETOPERATORS = ['C','U','I','P']
 
 class SetParser:
 	def __init__(self, input):
@@ -99,7 +111,7 @@ class SetParser:
 		self.operators = []
 
 	def precedenceForOperator(self, operator):
-		if operator == 'C':
+		if operator == 'C' or operator == 'P':
 			return 0
 		elif operator == 'U' or operator == 'I':
 			return 1
@@ -148,6 +160,8 @@ class SetParser:
 			operand1 = self.output.pop()
 			operand2 = self.output.pop()
 			self.output.append(SetIntersection(operand2, operand1))
+		elif operator == 'P':
+			self.output.append(SetPowerset(self.output.pop()))
 		else:
 			raise Exception('Error: When adding a new operator, unexpected operator occured.')
 

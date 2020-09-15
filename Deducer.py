@@ -1,5 +1,5 @@
 from PropositionalSentences import CONNECTIVES, PropVariable, PropNegation, PropConjunction, PropDisjunction
-from SetTheorySentences import SETOPERATIONS, Set, SetMember, SetSubset, SetComplement, SetUnion, SetIntersection, SetEquality
+from SetTheorySentences import SETOPERATIONS, Set, SetMember, SetSubset, SetComplement, SetUnion, SetIntersection, SetEquality, SetPowerset
 
 def calculateVariables(claim):
 	if claim.type == SETOPERATIONS.SET:
@@ -16,6 +16,8 @@ def calculateVariables(claim):
 		return calculateVariables(claim.set1).union(calculateVariables(claim.set2))
 	elif claim.type == SETOPERATIONS.EQUALITY:
 		return calculateVariables(claim.set1).union(calculateVariables(claim.set2))
+	elif claim.type == SETOPERATIONS.POWERSET:
+		return calculateVariables(claim.set)
 	elif claim.type == CONNECTIVES.NEG:
 		return calculateVariables(claim.subformula)
 	elif claim.type == CONNECTIVES.AND:
@@ -61,6 +63,9 @@ class Deducer:
 					self.assumptions.remove(assumption)
 					self.assumptions.append(PropConjunction(SetMember(assumption.element, assumption.set.set2),SetMember(assumption.element, assumption.set.set1)))
 					return True
+				elif assumption.set.type == SETOPERATIONS.POWERSET:
+					self.assumptions.remove(assumption)
+					self.assumptions.append(SetSubset(assumption.element, assumption.set.set))
 			elif assumption.type == SETOPERATIONS.SUBSET:
 				self.assumptions.remove(assumption)
 				variable = self.freshVariable()
@@ -86,6 +91,9 @@ class Deducer:
 					self.conclusions.remove(conclusion)
 					self.conclusions.append(PropConjunction(SetMember(conclusion.element, conclusion.set.set2),SetMember(conclusion.element, conclusion.set.set1)))
 					return True
+				elif conclusion.set.type == SETOPERATIONS.POWERSET:
+					self.conclusions.remove(conclusion)
+					self.conclusions.append(SetSubset(conclusion.element, conclusion.set.set))
 			elif conclusion.type == SETOPERATIONS.SUBSET:
 				self.conclusions.remove(conclusion)
 				variable = self.freshVariable()
