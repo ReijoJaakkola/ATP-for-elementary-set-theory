@@ -13,7 +13,7 @@ if __name__ == "__main__":
 		parser = SetTheoryParser(formula)
 		parsedFormula = parser.parseExpression()
 
-		print('Proving the formula...')
+		print('Proving the formula...\n')
 		deducer = Deducer([],[parsedFormula])
 		result = deducer.prove()
 		print(f'Provers result: {result}\n')
