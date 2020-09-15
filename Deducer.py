@@ -204,22 +204,19 @@ class Deducer:
 
 	def expandSetTheoreticalDefinition(self):
 		assumptionsCopy = self.assumptions.copy()
-		assumptionsCopy.sort(key = lambda claim : self.complexity(claim))
-		assumptionsCopy.reverse()
-
 		conclusionsCopy = self.conclusions.copy()
-		conclusionsCopy.sort(key = lambda claim : self.complexity(claim))
-		conclusionsCopy.reverse()
+		definitions = []
+		for assumption in assumptionsCopy:
+			definitions.append([1,assumption])
+		for conclusion in conclusionsCopy:
+			definitions.append([2,conclusion])
 
-		if len(assumptionsCopy) == 0:
-			return self.expandSetTheoreticalDefinitionInConclusions(conclusionsCopy[0])
-		elif len(conclusionsCopy) == 0:
-			return self.expandSetTheoreticalDefinitionInAssumptions(assumptionsCopy[0])
+		definitions.sort(key = lambda claim : self.complexity(claim[1]))
+		if definitions[-1][0] == 1:
+			result = self.expandSetTheoreticalDefinitionInAssumptions(definitions[-1][1])
 		else:
-			if self.complexity(assumptionsCopy[0]) > self.complexity(conclusionsCopy[0]):
-				return self.expandSetTheoreticalDefinitionInAssumptions(assumptionsCopy[0])
-			else:
-				return self.expandSetTheoreticalDefinitionInConclusions(conclusionsCopy[0])
+			result = self.expandSetTheoreticalDefinitionInConclusions(definitions[-1][1])
+		return result
 
 	def expandEquality(self):
 		for assumption in self.assumptions:
