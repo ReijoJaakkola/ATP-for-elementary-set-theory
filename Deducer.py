@@ -1,4 +1,4 @@
-from Utils import combinations
+from Utils import combinations, transitiveClosure
 from PropositionalSentences import CONNECTIVES, PropVariable, PropNegation, PropConjunction, PropDisjunction
 from SetTheorySentences import SETOPERATIONS, Set, SetMember, SetSubset, SetComplement, SetUnion, SetIntersection, SetEquality, SetPowerset, SetDifference
 
@@ -61,24 +61,78 @@ class Deducer:
 
 		print(self.depth * '\t' + f'{assumptions} => {conclusions}')
 
+	def calculateTransitiveClosureForMembership(self):
+		# First collect the relevant assumptions.
+		relevantAssumptions = []
+		for assumption in self.assumptions:
+			if assumption.type == SETOPERATIONS.MEMBER:
+				relevantAssumptions.append(assumption)
+
+		# Create an adjacency matrix.
+		matrix = []
+		for i in range(len(relevantAssumptions)):
+			array = []
+			for j in range(len(relevantAssumptions)):
+				if relevantAssumptions[i].set == relevantAssumptions[j].element:
+					array.append(True)
+				else:
+					array.append(False)
+			matrix.append(array)
+
+		# Calculate its transitive closure.
+		matrix = transitiveClosure(len(relevantAssumptions), matrix)
+
+		# Check whether any of the memberships appear in the conclusions.
+		for i in range(len(relevantAssumptions)):
+			for j in range(len(relevantAssumptions)):
+				if matrix[i][j] == True and SetMember(relevantAssumptions[i].element,relevantAssumptions[j].set) in self.conclusions:
+					return True
+		return False
+
+	def calculateTransitiveClosureForSubsets(self):
+		# First collect the relevant assumptions.
+		relevantAssumptions = []
+		for assumption in self.assumptions:
+			if assumption.type == SETOPERATIONS.SUBSET:
+				relevantAssumptions.append(assumption)
+
+		# Create an adjacency matrix.
+		matrix = []
+		for i in range(len(relevantAssumptions)):
+			array = []
+			for j in range(len(relevantAssumptions)):
+				if relevantAssumptions[i].set2 == relevantAssumptions[j].set1:
+					array.append(True)
+				else:
+					array.append(False)
+			matrix.append(array)
+
+		# Calculate its transitive closure.
+		matrix = transitiveClosure(len(relevantAssumptions), matrix)
+
+		# Check whether any of the memberships appear in the conclusions.
+		for i in range(len(relevantAssumptions)):
+			for j in range(len(relevantAssumptions)):
+				if matrix[i][j] == True:
+					if SetSubset(relevantAssumptions[i].set1,relevantAssumptions[j].set2) in self.conclusions:
+						return True
+		return False
+
 	def isProofFinished(self):
-		# TODO: SHOULD CALCULATE TRANSITIVE CLOSURE.
 		for assumption in self.assumptions:
 				for conclusion in self.conclusions:
 					if assumption == conclusion:
 						return True
 
+		if self.calculateTransitiveClosureForMembership() == True:
+			return True
+
+		if self.calculateTransitiveClosureForSubsets() == True:
+			return True
+
 		for assumption1 in self.assumptions:
 			for assumption2 in self.assumptions:
-				if assumption1.type == SETOPERATIONS.MEMBER and assumption2.type == SETOPERATIONS.MEMBER:
-					if assumption1.set == assumption2.element:
-						if SetMember(assumption1.element, assumption2.set) in self.conclusions:
-							return True
-				elif assumption1.type == SETOPERATIONS.SUBSET and assumption2.type == SETOPERATIONS.SUBSET:
-					if assumption1.set2 == assumption2.set1:
-						if SetSubset(assumption1.set1, assumption2.set2) in self.conclusions:
-							return True
-				elif assumption1.type == SETOPERATIONS.MEMBER and assumption2.type == SETOPERATIONS.SUBSET:
+				if assumption1.type == SETOPERATIONS.MEMBER and assumption2.type == SETOPERATIONS.SUBSET:
 					if assumption1.set == assumption2.set1:
 						if SetMember(assumption1.element, assumption2.set2) in self.conclusions:
 							return True

@@ -36,3 +36,13 @@ def combinations(length, tuple):
 	combinations = []
 	combinationsUtils(length, tuple, combination, combinations)
 	return combinations
+
+def transitiveClosure(numVertices, graph):
+	reach = graph.copy()
+
+	for k in range(numVertices):
+		for i in range(numVertices):
+			for j in range(numVertices):
+				reach[i][j] = reach[i][j] or (reach[i][k] and reach[k][j])
+
+	return reach
