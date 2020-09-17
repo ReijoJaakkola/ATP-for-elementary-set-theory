@@ -83,6 +83,14 @@ class Deducer:
 						if SetMember(assumption1.element, assumption2.set2) in self.conclusions:
 							return True
 
+		for conclusion in self.conclusions:
+			if conclusion.type == SETOPERATIONS.SUBSET:
+				if conclusion.set1 == conclusion.set2:
+					return True
+			elif conclusion.type == SETOPERATIONS.EQUALITY:
+				if conclusion.set1 == conclusion.set2:
+					return True
+
 		return False
 
 	def expandSetTheoreticalMembershipInAssumptions(self, assumption):
