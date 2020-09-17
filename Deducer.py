@@ -315,6 +315,29 @@ class Deducer:
 		return False
 
 	def considerCases(self):
+		# First try to expand a conclusion.
+		for conclusion in self.conclusions:
+			if conclusion.type == CONNECTIVES.AND:
+				# We have to deal with two cases based corresponding to the two subformulas.
+				conclusions1 = self.conclusions.copy()
+				conclusions1.remove(conclusion)
+				conclusions1.append(conclusion.subformula1)
+				conclusions2 = self.conclusions.copy()
+				conclusions2.remove(conclusion)
+				conclusions2.append(conclusion.subformula2)
+
+				# Initialize two deducers for the different cases.
+				deducer1 = Deducer(self.assumptions.copy(), conclusions1, self.depth + 1)
+				deducer2 = Deducer(self.assumptions.copy(), conclusions2, self.depth + 1)
+
+				# Run the deducer.
+				print(self.depth * '\t' + f'First subcase:')
+				result1 = deducer1.prove()
+				print(self.depth * '\t' + f'Second subcase:')
+				result2 = deducer2.prove()
+				return result1 and result2
+
+		# Next, try to find an assumption that could be expanded.
 		for assumption in self.assumptions:
 			if assumption.type == CONNECTIVES.OR:
 				# We have to deal with two cases based corresponding to the two subformulas.
@@ -335,28 +358,6 @@ class Deducer:
 				result1 = deducer1.prove()
 				print(self.depth * '\t' + f'Second subcase:')
 				deducer2.printStatus()
-				result2 = deducer2.prove()
-				return result1 and result2
-
-		# Next, try to find a conlcusion that could be expanded.
-		for conclusion in self.conclusions:
-			if conclusion.type == CONNECTIVES.AND:
-				# We have to deal with two cases based corresponding to the two subformulas.
-				conclusions1 = self.conclusions.copy()
-				conclusions1.remove(conclusion)
-				conclusions1.append(conclusion.subformula1)
-				conclusions2 = self.conclusions.copy()
-				conclusions2.remove(conclusion)
-				conclusions2.append(conclusion.subformula2)
-
-				# Initialize two deducers for the different cases.
-				deducer1 = Deducer(self.assumptions.copy(), conclusions1, self.depth + 1)
-				deducer2 = Deducer(self.assumptions.copy(), conclusions2, self.depth + 1)
-
-				# Run the deducer.
-				print(self.depth * '\t' + f'First subcase:')
-				result1 = deducer1.prove()
-				print(self.depth * '\t' + f'Second subcase:')
 				result2 = deducer2.prove()
 				return result1 and result2
 
