@@ -116,6 +116,18 @@ class Deducer:
 				if matrix[i][j] == True:
 					if SetSubset(relevantAssumptions[i].set1,relevantAssumptions[j].set2) in self.conclusions:
 						return True
+
+		# Check whether we have a chain of the form
+		# x \in A_1 \subseteq A_2 \subseteq ... \subseteq A_n,
+		# and x \in A_n as a conclusion.
+		for assumption in self.assumptions:
+			if assumption.type == SETOPERATIONS.MEMBER:
+				for i in range(len(relevantAssumptions)):
+					for j in range(len(relevantAssumptions)):
+						if matrix[i][j] == True and assumption.set == relevantAssumptions[i].set1:
+							if SetMember(assumption.element, relevantAssumptions[j].set2) in self.conclusions:
+								return True
+		
 		return False
 
 	def isProofFinished(self):
@@ -129,13 +141,6 @@ class Deducer:
 
 		if self.calculateTransitiveClosureForSubsets() == True:
 			return True
-
-		for assumption1 in self.assumptions:
-			for assumption2 in self.assumptions:
-				if assumption1.type == SETOPERATIONS.MEMBER and assumption2.type == SETOPERATIONS.SUBSET:
-					if assumption1.set == assumption2.set1:
-						if SetMember(assumption1.element, assumption2.set2) in self.conclusions:
-							return True
 
 		for conclusion in self.conclusions:
 			if conclusion.type == SETOPERATIONS.SUBSET:
@@ -257,6 +262,23 @@ class Deducer:
 				self.conclusions.append(PropConjunction(SetSubset(conclusion.set1,conclusion.set2),SetSubset(conclusion.set2, conclusion.set1)))
 				return True
 		return False
+
+	def expandSubsetIntersection(self):
+		for assumption in self.assumptions:
+			if assumption.type == SETOPERATIONS.SUBSET:
+				if assumption.set2.type == SETOPERATIONS.INTERSECTION:
+					self.assumptions.remove(assumption)
+					self.assumptions.append(SetSubset(assumption.set1, assumption.set2.set1))
+					self.assumptions.append(SetSubset(assumption.set1, assumption.set2.set2))
+					return True
+
+		for conclusion in self.conclusions:
+			if conclusion.type == SETOPERATIONS.SUBSET:
+				if conclusion.set2.type == SETOPERATIONS.INTERSECTION:
+					self.conclusions.remove(conclusion)
+					self.conclusions.append(SetSubset(conclusion.set1, conclusion.set2.set1))
+					self.conclusions.append(SetSubset(conclusion.set1, conclusion.set2.set2))
+					return True
 
 	def expandLogicalDefinition(self):
 		for assumption in self.assumptions:
@@ -453,15 +475,28 @@ class Deducer:
 				valid = True
 				break
 
+			# Expand all subset relations of the form x S y I z.
+			result3 = False
+			while True:
+				if self.expandSubsetIntersection():
+					self.printStatus()
+					result3 = True
+				else:
+					break
+
+			if result3 == True and self.isProofFinished():
+				valid = True
+				break
+
 			# Expand a single set-theoretic membership.
-			result3 = self.expandSetTheoreticalMembership()
-			if result3 == True:
+			result4 = self.expandSetTheoreticalMembership()
+			if result4 == True:
 				self.printStatus()
 				if self.isProofFinished():
 					valid = True
 					break
 
-			if result1 == False and result2 == False and result3 == False:
+			if result1 == False and result2 == False and result3 == False and result4 == False:
 				done = True
 
 		if valid == True:
