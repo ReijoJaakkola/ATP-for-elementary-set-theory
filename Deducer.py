@@ -70,15 +70,15 @@ class Deducer:
 
 		for assumption1 in self.assumptions:
 			for assumption2 in self.assumptions:
-				if assumption1.type == SETOPERATIONS.MEMBER and assumption2.type == SETOPERATIONS.MEMBER and assumption1 != assumption2:
+				if assumption1.type == SETOPERATIONS.MEMBER and assumption2.type == SETOPERATIONS.MEMBER:
 					if assumption1.set == assumption2.element:
 						if SetMember(assumption1.element, assumption2.set) in self.conclusions:
 							return True
-				elif assumption1.type == SETOPERATIONS.SUBSET and assumption2.type == SETOPERATIONS.SUBSET and assumption1 != assumption2:
+				elif assumption1.type == SETOPERATIONS.SUBSET and assumption2.type == SETOPERATIONS.SUBSET:
 					if assumption1.set2 == assumption2.set1:
 						if SetSubset(assumption1.set1, assumption2.set2) in self.conclusions:
 							return True
-				elif assumption1.type == SETOPERATIONS.MEMBER and assumption2.type == SETOPERATIONS.SUBSET and assumption1 != assumption2:
+				elif assumption1.type == SETOPERATIONS.MEMBER and assumption2.type == SETOPERATIONS.SUBSET:
 					if assumption1.set == assumption2.set1:
 						if SetMember(assumption1.element, assumption2.set2) in self.conclusions:
 							return True
