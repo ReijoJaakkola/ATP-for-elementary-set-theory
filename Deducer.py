@@ -61,34 +61,6 @@ class Deducer:
 
 		print(self.depth * '\t' + f'{assumptions} => {conclusions}')
 
-	def calculateTransitiveClosureForMembership(self):
-		# First collect the relevant assumptions.
-		relevantAssumptions = []
-		for assumption in self.assumptions:
-			if assumption.type == SETOPERATIONS.MEMBER:
-				relevantAssumptions.append(assumption)
-
-		# Create an adjacency matrix.
-		matrix = []
-		for i in range(len(relevantAssumptions)):
-			array = []
-			for j in range(len(relevantAssumptions)):
-				if relevantAssumptions[i].set == relevantAssumptions[j].element:
-					array.append(True)
-				else:
-					array.append(False)
-			matrix.append(array)
-
-		# Calculate its transitive closure.
-		matrix = transitiveClosure(len(relevantAssumptions), matrix)
-
-		# Check whether any of the memberships appear in the conclusions.
-		for i in range(len(relevantAssumptions)):
-			for j in range(len(relevantAssumptions)):
-				if matrix[i][j] == True and SetMember(relevantAssumptions[i].element,relevantAssumptions[j].set) in self.conclusions:
-					return True
-		return False
-
 	def calculateTransitiveClosureForSubsets(self):
 		# First collect the relevant assumptions.
 		relevantAssumptions = []
@@ -135,9 +107,6 @@ class Deducer:
 				for conclusion in self.conclusions:
 					if assumption == conclusion:
 						return True
-
-		if self.calculateTransitiveClosureForMembership() == True:
-			return True
 
 		if self.calculateTransitiveClosureForSubsets() == True:
 			return True
