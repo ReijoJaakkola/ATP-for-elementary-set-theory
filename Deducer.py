@@ -393,6 +393,166 @@ class Deducer:
 		# No cases left to consider.
 		return False
 
+	def doWeHaveUniversalQuantificationInAssumptions(self):
+		for assumption in self.assumptions:
+			if assumption.type == QUANTIFIERS.UNIVERSAL:
+				return True
+		return False
+
+	def doWeHaveExistentialQuantificationInConclusions(self):
+		for conclusion in self.conclusions:
+			if conclusion.type == QUANTIFIERS.EXISTENTIAL:
+				return True
+		return False
+
+	def expandExistentialQuantificationInAssumptions(self):
+		# First calculate what variables already appear in the conclusions and in the assumptions.
+		reservedVariables = set()
+		for assumption in self.assumptions:
+			reservedVariables = reservedVariables.union(calculateVariables(assumption))
+		for conclusion in self.conclusions:
+			reservedVariables = reservedVariables.union(calculateVariables(conclusion))
+
+		# Collect all the relevant assumptions.
+		relevantAssumptions = []
+		for assumption in self.assumptions:
+			if assumption.type == QUANTIFIERS.EXISTENTIAL:
+				relevantAssumptions.append(assumption)
+		
+		if len(relevantAssumptions) == 0:
+			# No quantification to expand.
+			return False
+
+		for assumption in relevantAssumptions:
+			freshVariable = suggestFreshVariable('x', reservedVariables)
+			reservedVariables = reservedVariables.union({freshVariable})
+
+			self.assumptions.remove(assumption)
+			self.assumptions.append(substituteVariable(assumption.variable, freshVariable, assumption.subformula))
+
+		return True
+
+	def expandUniversalQuantificationInConclusions(self):
+		# First calculate what variables already appear in the conclusions and in the assumptions.
+		reservedVariables = set()
+		for assumption in self.assumptions:
+			reservedVariables = reservedVariables.union(calculateVariables(assumption))
+		for conclusion in self.conclusions:
+			reservedVariables = reservedVariables.union(calculateVariables(conclusion))
+
+		# Collect all the relevant conclusions.
+		relevantConclusions = []
+		for conclusion in self.conclusions:
+			if conclusion.type == QUANTIFIERS.UNIVERSAL:
+				relevantConclusions.append(conclusion)
+		
+		if len(relevantConclusions) == 0:
+			# No quantification to expand.
+			return False
+
+		for conclusion in relevantConclusions:
+			freshVariable = suggestFreshVariable('x', reservedVariables)
+			reservedVariables = reservedVariables.union({freshVariable})
+
+			self.conclusions.remove(conclusion)
+			self.conclusions.append(substituteVariable(conclusion.variable, freshVariable, conclusion.subformula))
+
+		return True
+
+	def expandExistentialQuantificationInConclusions(self):
+		# First calculate which conclusions contain existential quantifiers.
+		relevantConclusions = []
+		for conclusion in self.conclusions:
+			if conclusion.type == QUANTIFIERS.EXISTENTIAL:
+				relevantConclusions.append(conclusion)
+
+		if len(relevantConclusions) == 0:
+			# No existentially quantified claims among the conclusions.
+			return False
+
+		# Calculate the variables occuring in the assumptions and in the conclusions.
+		freeVariables = set()
+		for assumption in self.assumptions:
+			freeVariables = freeVariables.union(calculateVariables(assumption))
+		for conclusion in self.conclusions:
+			freeVariables = freeVariables.union(calculateVariables(conclusion))
+
+		# Add also the bounded variables.
+		for conclusion in relevantConclusions:
+			freeVariables = freeVariables.union({conclusion.variable})
+
+		# Form all the combinations of freeVariables of length len(relevantAssumptions),
+		# and check whether any of them works.
+		combs = combinations(len(relevantConclusions), list(freeVariables))
+		valid = False
+		for combination in combs:
+			conclusionsCopy = self.conclusions.copy()
+			
+			for i in range(len(relevantConclusions)):
+				conclusionsCopy.remove(relevantConclusions[i])
+				conclusionsCopy.append(substituteVariable(relevantConclusions[i].variable, combination[i], relevantConclusions[i].subformula))
+			
+			# Initialize a deducer for this case.
+			deducer = Deducer(self.assumptions.copy(), conclusionsCopy, self.depth + 1)
+
+			# Run the deducer.
+			print(self.depth * '\t' + f'Expanding existential quantifiers with variables {combination}:')
+			valid = deducer.prove()
+
+			if valid == True:
+				# We found a valid combination, so no need to continue.
+				return True
+
+		# None of the combinations worked.
+		return False
+
+	def expandUniversalQuantificationInAssumptions(self):
+		# First calculate which assumptions contain universal quantifiers.
+		relevantAssumptions = []
+		for assumption in self.assumptions:
+			if assumption.type == QUANTIFIERS.UNIVERSAL:
+				relevantAssumptions.append(assumption)
+
+		if len(relevantAssumptions) == 0:
+			# No universally quantified claims among the assumptions.
+			return False
+
+		# Calculate the variables occuring in the assumptions and in the conclusions.
+		freeVariables = set()
+		for assumption in self.assumptions:
+			freeVariables = freeVariables.union(calculateVariables(assumption))
+		for conclusion in self.conclusions:
+			freeVariables = freeVariables.union(calculateVariables(conclusion))
+		
+		# Add also the bounded variables.
+		for assumption in relevantAssumptions:
+			freeVariables = freeVariables.union({assumption.variable})
+
+		# Form all the combinations of freeVariables of length len(relevantAssumptions),
+		# and check whether any of them works.
+		combs = combinations(len(relevantAssumptions), list(freeVariables))
+		valid = False
+		for combination in combs:
+			assumptionsCopy = self.assumptions.copy()
+			
+			for i in range(len(relevantAssumptions)):
+				assumptionsCopy.remove(relevantAssumptions[i])
+				assumptionsCopy.append(substituteVariable(relevantAssumptions[i].variable, combination[i], relevantAssumptions[i].subformula))
+			
+			# Initialize a deducer for this case.
+			deducer = Deducer(assumptionsCopy, self.conclusions.copy(), self.depth + 1)
+
+			# Run the deducer.
+			print(self.depth * '\t' + f'Expanding universal quantifiers with variables {combination}:')
+			valid = deducer.prove()
+
+			if valid == True:
+				# We found a valid combination, so no need to continue.
+				return True
+
+		# None of the combinations worked.
+		return False
+
 	def expandSubsetRelationsInConclusions(self):
 		# First calculate what variables already appear in the conclusions and in the assumptions.
 		reservedVariables = set()
@@ -426,7 +586,7 @@ class Deducer:
 				return True
 		return False
 
-	def considerDifferentVariables(self):
+	def considerDifferentVariablesForSubsets(self):
 		# First calculate what assumptions are subset relations.
 		relevantAssumptions = []
 		for assumption in self.assumptions:
@@ -542,6 +702,36 @@ class Deducer:
 			# The claim was proved by studying cases.
 			return True
 
+		# Try to expand existential and universal quantifiers, where the expansion is easy, i.e.
+		# the variable needs to be a fresh one.
+		result = self.expandExistentialQuantificationInAssumptions() or self.expandUniversalQuantificationInConclusions()
+		if result == True:
+			# We have expanded quantifiers, so try to prove the claim
+			# in the new situation.
+			valid = self.prove()
+			if valid == True:
+				# We succeeded in proving the claim.
+				return True
+
+		# Try to then consider different ways of expanding universal and existential quantifiers.
+		# First, try to expand universal quantifiers in assumptions.
+		if self.doWeHaveUniversalQuantificationInAssumptions():
+			result = self.expandUniversalQuantificationInAssumptions()
+			if result == True:
+				# We succeeded in proving this claim.
+				return True
+			else:
+				return False
+
+		# Then try to expand existential quantifiers in conclusions.
+		if self.doWeHaveExistentialQuantificationInConclusions():
+			result = self.expandExistentialQuantificationInConclusions()
+			if result == True:
+				# We succeeded in proving this claim.
+				return True
+			else:
+				return False
+
 		# Only thing that can be remaining now is subset relations between sets.
 		# What we do now is that we will expand all the subset relations in the conclusions.
 		# This will be done by using the definition of subset relation
@@ -556,14 +746,16 @@ class Deducer:
 			if valid == True:
 				# We succeeded in proving the claim.
 				return True
-		else:
-			if self.doWeHaveSubsetRelationsInAssumptions():
-				# Go trough all the subset relations in the assumptions, and try to
-				# expand them with all the possible combinations for freshVariables.
-				valid = self.considerDifferentVariables()
-				if valid == True:
-					# We succeeded in proving the claim.
-					return True
+		
+		if self.doWeHaveSubsetRelationsInAssumptions():
+			# Go trough all the subset relations in the assumptions, and try to
+			# expand them with all the possible combinations for freshVariables.
+			valid = self.considerDifferentVariablesForSubsets()
+			if valid == True:
+				# We succeeded in proving the claim.
+				return True
+			else:
+				return False
 
 		# Nothing left to do, and the claim has not been proven.
 		# Could not find a proof.
