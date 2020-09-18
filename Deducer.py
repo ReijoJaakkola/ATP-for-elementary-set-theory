@@ -1,5 +1,6 @@
 from Utils import combinations, transitiveClosure
 from PropositionalSentences import CONNECTIVES, PropVariable, PropNegation, PropConjunction, PropDisjunction
+from FirstOrderSentences import QUANTIFIERS, ExistentialQuantifier, UniversalQuantifier
 from SetTheorySentences import SETOPERATIONS, Set, SetMember, SetSubset, SetComplement, SetUnion, SetIntersection, SetEquality, SetPowerset, SetDifference
 
 def suggestFreshVariable(suggestion, reserved):
@@ -35,6 +36,45 @@ def calculateVariables(claim):
 		return calculateVariables(claim.subformula1).union(calculateVariables(claim.subformula2))
 	elif claim.type == CONNECTIVES.OR:
 		return calculateVariables(claim.subformula1).union(calculateVariables(claim.subformula2))
+	elif claim.type == QUANTIFIERS.EXISTENTIAL:
+		raise Exception('Not implemented.')
+	elif claim.type == QUANTIFIERS.UNIVERSAL:
+		raise Exception('Not implemented.')
+	else:
+		raise Exception('Error: Unrecognized claim type.')
+
+def substituteVariable(variable1, variable2, claim):
+	if claim.type == SETOPERATIONS.SET:
+		if claim.set == variable1:
+			return Set(variable2)
+		else:
+			return claim
+	elif claim.type == SETOPERATIONS.MEMBER:
+		return SetMember(substituteVariable(variable1, variable2, claim.element), substituteVariable(variable1, variable2, claim.set))
+	elif claim.type == SETOPERATIONS.SUBSET:
+		return SetSubset(substituteVariable(variable1, variable2, claim.set1), substituteVariable(variable1, variable2, claim.set2))
+	elif claim.type == SETOPERATIONS.COMPLEMENT:
+		return SetComplement(substituteVariable(variable1, variable2, claim.set))
+	elif claim.type == SETOPERATIONS.UNION:
+		return SetUnion(substituteVariable(variable1, variable2, claim.set1), substituteVariable(variable1, variable2, claim.set2))
+	elif claim.type == SETOPERATIONS.INTERSECTION:
+		return SetIntersection(substituteVariable(variable1, variable2, claim.set1), substituteVariable(variable1, variable2, claim.set2))
+	elif claim.type == SETOPERATIONS.EQUALITY:
+		return SetEquality(substituteVariable(variable1, variable2, claim.set1), substituteVariable(variable1, variable2, claim.set2))
+	elif claim.type == SETOPERATIONS.POWERSET:
+		return SetPowerset(substituteVariable(variable1, variable2, claim.set))
+	elif claim.type == SETOPERATIONS.DIFFERENCE:
+		return SetDifference(substituteVariable(variable1, variable2, claim.set1), substituteVariable(variable1, variable2, claim.set2))
+	elif claim.type == CONNECTIVES.NEG:
+		return PropNegation(substituteVariable(variable1, variable2, claim.subformula))
+	elif claim.type == CONNECTIVES.AND:
+		return PropConjunction(substituteVariable(variable1, variable2, claim.subformula1), substituteVariable(variable1, variable2, claim.subformula2))
+	elif claim.type == CONNECTIVES.OR:
+		return PropDisjunction(substituteVariable(variable1, variable2, claim.subformula1), substituteVariable(variable1, variable2, claim.subformula2))
+	elif claim.type == QUANTIFIERS.EXISTENTIAL:
+		raise Exception('Not implemented.')
+	elif claim.type == QUANTIFIERS.UNIVERSAL:
+		raise Exception('Not implemented.')
 	else:
 		raise Exception('Error: Unrecognized claim type.')
 

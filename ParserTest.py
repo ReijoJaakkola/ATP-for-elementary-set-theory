@@ -1,4 +1,5 @@
 from SetTheorySentences import SetParser, SetTheoryParser
+from Deducer import substituteVariable
 
 parser = SetParser('x')
 print(parser.parseExpression())
@@ -65,3 +66,6 @@ parser = SetTheoryParser('Ex[x=x->y=y]')
 print(parser.parseExpression())
 parser = SetTheoryParser('[Az[z€X->z=x]&x€X&y€Y]->x=y')
 print(parser.parseExpression())
+
+parser = SetTheoryParser('[x=x->(xUy)=y]')
+print(substituteVariable('x','z',parser.parseExpression()))
