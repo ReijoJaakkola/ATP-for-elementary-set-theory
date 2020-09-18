@@ -1,16 +1,17 @@
 from enum import Enum
 from PropositionalSentences import PropNegation, PropConjunction, PropDisjunction, PropImplication, PropEquivalence
+from FirstOrderSentences import ExistentialQuantifier, UniversalQuantifier
 
 class SETOPERATIONS(Enum):
-	SET = 6
-	MEMBER = 7
-	SUBSET = 8
-	COMPLEMENT = 9
-	UNION = 10
-	INTERSECTION = 11
-	EQUALITY = 12
-	POWERSET = 13
-	DIFFERENCE = 14
+	SET = 8
+	MEMBER = 9
+	SUBSET = 10
+	COMPLEMENT = 11
+	UNION = 12
+	INTERSECTION = 13
+	EQUALITY = 14
+	POWERSET = 15
+	DIFFERENCE = 16
 
 class Set:
 	def __init__(self, set):
@@ -210,7 +211,7 @@ class SetParser:
 
 		return self.output.pop()
 
-LOGICOPERATORS = ['€','S','=','!','|','&','-','<']
+LOGICOPERATORS = ['€','S','=','!','|','&','-','<','E','A']
 
 class SetTheoryParser:
 	def __init__(self, input):
@@ -222,7 +223,7 @@ class SetTheoryParser:
 	def precedenceForOperator(self, operator):
 		if operator == '€' or operator == 'S' or operator == '=':
 			return 0
-		elif operator == '!':
+		elif operator == '!' or operator[:1] == 'E' or operator[:1] == 'A':
 			return 1
 		elif operator == '|' or operator == '&':
 			return 2
@@ -269,6 +270,22 @@ class SetTheoryParser:
 				operator += self.input.pop()
 				operator += self.input.pop()
 				return operator
+			elif self.input[-1] == 'E':
+				if len(self.input) < 2:
+					raise Exception('Error: Syntax error.')
+				quantifier = self.input.pop()
+				if self.peekIsNextOperator():
+					raise Exception('Error: Syntax error.')
+				quantifier += self.getNextAtom()
+				return quantifier
+			elif self.input[-1] == 'A':
+				if len(self.input) < 2:
+					raise Exception('Error: Syntax error.')
+				quantifier = self.input.pop()
+				if self.peekIsNextOperator():
+					raise Exception('Error: Syntax error.')
+				quantifier += self.getNextAtom()
+				return quantifier
 			else:
 				return self.input.pop()
 		else:
@@ -297,6 +314,10 @@ class SetTheoryParser:
 			self.output.append(SetEquality(operand2, operand1))
 		elif operator == '!':
 			self.output.append(PropNegation(self.output.pop()))
+		elif operator[:1] == 'E':
+			self.output.append(ExistentialQuantifier(operator[1:], self.output.pop()))
+		elif operator[:1] == 'A':
+			self.output.append(UniversalQuantifier(operator[1:], self.output.pop()))
 		elif operator == '&':
 			operand1 = self.output.pop()
 			operand2 = self.output.pop()
