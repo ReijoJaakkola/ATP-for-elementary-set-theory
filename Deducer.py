@@ -302,9 +302,12 @@ class Deducer:
 				# Run the deducer.
 				print(self.depth * '\t' + f'First subcase:')
 				result1 = deducer1.prove()
+				if result1 == False:
+					return False
+
 				print(self.depth * '\t' + f'Second subcase:')
 				result2 = deducer2.prove()
-				return result1 and result2
+				return result2
 
 		# Next, try to find an assumption that could be expanded.
 		for assumption in self.assumptions:
@@ -325,10 +328,13 @@ class Deducer:
 				print(self.depth * '\t' + f'First subcase:')
 				deducer1.printStatus()
 				result1 = deducer1.prove()
+				if result1 == False:
+					return False
+
 				print(self.depth * '\t' + f'Second subcase:')
 				deducer2.printStatus()
 				result2 = deducer2.prove()
-				return result1 and result2
+				return result2
 
 		# No cases left to consider.
 		return False
