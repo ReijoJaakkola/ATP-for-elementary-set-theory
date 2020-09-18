@@ -1,8 +1,7 @@
 # ATP for elementary set theory
  Automated theorem prover for elementary set theory (ATPEST).
  
- The goal for ATPEST is to be able to prove statements of the form
- "For all x1,...,xn, A(x1,...,xn) holds"
+ The goal for ATPEST is to be able to prove statements of the form A(x1,...,xn),
  where A(x1,...,xn) is a quantifier-free first-order formula over the vocabulary {€}, where € denotes the membership relation for sets.
  
  We have two kinds of formulas, the first being the set-formulas.
