@@ -131,7 +131,7 @@
  what it had to prove. On the other hand, the prover stopped in the second subcase, because it realized that if x_0 is a subset of y, and y is a subset of x, then x_0
  is also a subset of x, which it what it had to prove.
  
- As a final example, consider the following proof of [Az[z€X->z=x] & x€X & Aw[w€Y->w=y] & y€Y & X=Y] -> x=y, which states that if two singelton sets are identical,
+ As an example on how quantifiers are handled, consider the following proof of [Az[z€X->z=x] & x€X & Aw[w€Y->w=y] & y€Y & X=Y] -> x=y, which states that if two singelton sets are identical,
  then so are the elements contained in the two sets. Since (at the moment) singelton set is not a primitive concept in ATPEST, we had to axiomatize it using universal
  quantification. The resulting proof is relatively short.
  ```
@@ -190,3 +190,6 @@
                                 {(x€X), (y€Y), (XSY), (YSX), (xSx), (xSx), ((xSy)&(ySx))} => {(ySx)}
                                 {(x€X), (y€Y), (XSY), (YSX), (xSx), (xSx), (xSy), (ySx)} => {(ySx)}
  ```
+Perhaps the most non-trivial theorem proved by ATPEST is the following
+[AxAyEzAw[w€z <-> [w = x | w = y]] & AxEyAz[Ey[y€x]->[y€x & [z€x->!z€y]]]]->!Ex[x€x],
+which essentially states that from the ZFC axioms Foundation & Pairing it follows that there does not exists a set x which is a member of itself.
