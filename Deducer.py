@@ -250,6 +250,10 @@ class Deducer:
 			return self.complexity(claim.subformula1) + self.complexity(claim.subformula2)
 		elif claim.type == CONNECTIVES.OR:
 			return self.complexity(claim.subformula1) + self.complexity(claim.subformula2)
+		elif claim.type == QUANTIFIERS.EXISTENTIAL:
+			return self.complexity(claim.subformula)
+		elif claim.type == QUANTIFIERS.UNIVERSAL:
+			return self.complexity(claim.subformula)
 		else:
 			raise Exception('Error: Unrecognized claim type.')
 
