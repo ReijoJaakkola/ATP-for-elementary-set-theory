@@ -191,5 +191,7 @@
                                 {(x€X), (y€Y), (XSY), (YSX), (xSx), (xSx), (xSy), (ySx)} => {(ySx)}
  ```
 Perhaps the most non-trivial theorem proved by ATPEST is the following
-[AxAyEzAw[w€z <-> [w = x | w = y]] & AxEyAz[Ey[y€x]->[y€x & [z€x->!z€y]]]]->!Ex[x€x],
+```
+[AxAyEzAw[w€z <-> [w = x | w = y]] & AxEyAz[Ey[y€x]->[y€x & [z€x->!z€y]]]]->!Ex[x€x]
+```
 which essentially states that from the ZFC axioms Foundation & Pairing it follows that there does not exists a set x which is a member of itself.
