@@ -37,9 +37,13 @@ def calculateVariables(claim):
 	elif claim.type == CONNECTIVES.OR:
 		return calculateVariables(claim.subformula1).union(calculateVariables(claim.subformula2))
 	elif claim.type == QUANTIFIERS.EXISTENTIAL:
-		raise Exception('Not implemented.')
+		variables = calculateVariables(claim.subformula)
+		variables.remove(claim.variable)
+		return variables
 	elif claim.type == QUANTIFIERS.UNIVERSAL:
-		raise Exception('Not implemented.')
+		variables = calculateVariables(claim.subformula)
+		variables.remove(claim.variable)
+		return variables
 	else:
 		raise Exception('Error: Unrecognized claim type.')
 
@@ -72,9 +76,15 @@ def substituteVariable(variable1, variable2, claim):
 	elif claim.type == CONNECTIVES.OR:
 		return PropDisjunction(substituteVariable(variable1, variable2, claim.subformula1), substituteVariable(variable1, variable2, claim.subformula2))
 	elif claim.type == QUANTIFIERS.EXISTENTIAL:
-		raise Exception('Not implemented.')
+		if variable1 == claim.variable:
+			return claim
+		else:
+			return ExistentialQuantifier(claim.variable, substituteVariable(variable1, variable2, claim.subformula))
 	elif claim.type == QUANTIFIERS.UNIVERSAL:
-		raise Exception('Not implemented.')
+		if variable1 == claim.variable:
+			return claim
+		else:
+			return UniversalQuantifier(claim.variable, substituteVariable(variable1, variable2, claim.subformula))
 	else:
 		raise Exception('Error: Unrecognized claim type.')
 

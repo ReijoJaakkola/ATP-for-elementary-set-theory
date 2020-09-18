@@ -69,3 +69,7 @@ print(parser.parseExpression())
 
 parser = SetTheoryParser('[x=x->(xUy)=y]')
 print(substituteVariable('x','z',parser.parseExpression()))
+parser = SetTheoryParser('Ax[x€x]')
+print(substituteVariable('x','z',parser.parseExpression()))
+parser = SetTheoryParser('Ay[x€x]')
+print(substituteVariable('x','z',parser.parseExpression()))
