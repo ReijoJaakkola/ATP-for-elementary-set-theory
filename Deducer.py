@@ -37,13 +37,9 @@ def calculateVariables(claim):
 	elif claim.type == CONNECTIVES.OR:
 		return calculateVariables(claim.subformula1).union(calculateVariables(claim.subformula2))
 	elif claim.type == QUANTIFIERS.EXISTENTIAL:
-		variables = calculateVariables(claim.subformula)
-		variables.remove(claim.variable)
-		return variables
+		return calculateVariables(claim.subformula)
 	elif claim.type == QUANTIFIERS.UNIVERSAL:
-		variables = calculateVariables(claim.subformula)
-		variables.remove(claim.variable)
-		return variables
+		return calculateVariables(claim.subformula)
 	else:
 		raise Exception('Error: Unrecognized claim type.')
 
@@ -477,10 +473,6 @@ class Deducer:
 		for conclusion in self.conclusions:
 			freeVariables = freeVariables.union(calculateVariables(conclusion))
 
-		# Add also the bounded variables.
-		for conclusion in relevantConclusions:
-			freeVariables = freeVariables.union({conclusion.variable})
-
 		# Form all the combinations of freeVariables of length len(relevantAssumptions),
 		# and check whether any of them works.
 		combs = combinations(len(relevantConclusions), list(freeVariables))
@@ -523,10 +515,6 @@ class Deducer:
 			freeVariables = freeVariables.union(calculateVariables(assumption))
 		for conclusion in self.conclusions:
 			freeVariables = freeVariables.union(calculateVariables(conclusion))
-		
-		# Add also the bounded variables.
-		for assumption in relevantAssumptions:
-			freeVariables = freeVariables.union({assumption.variable})
 
 		# Form all the combinations of freeVariables of length len(relevantAssumptions),
 		# and check whether any of them works.

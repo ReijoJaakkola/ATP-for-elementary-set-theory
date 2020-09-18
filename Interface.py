@@ -1,3 +1,4 @@
+import timeit
 from Deducer import Deducer
 from SetTheorySentences import SetTheoryParser
 
@@ -14,6 +15,9 @@ if __name__ == "__main__":
 		parsedFormula = parser.parseExpression()
 
 		print('Proving the formula...\n')
+		start = timeit.default_timer()
 		deducer = Deducer([],[parsedFormula])
 		result = deducer.prove()
-		print(f'Provers result: {result}\n')
+		stop = timeit.default_timer()
+		print(f'Provers result: {result}')
+		print(f'Time required by the prover: {stop - start}\n')
