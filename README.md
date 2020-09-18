@@ -15,20 +15,14 @@
  | denotes disjunction, -> denotes implication and <-> denotes equivalence.
  
  At the core of ATPEST is that it relies on expanding definitions of set-operators and applying rules of sequential calculus.
- For example, the following is a proof of x=x.
+ For example, the following is a proof of x S (x U y).
  ```
- {} => {(x=x)}
- {} => {((xSx)&(xSx))}
- First subcase:
-         {} => {(xSx)}
-         {} => {(!(x_0€x)|(x_0€x))}
-         {} => {!(x_0€x), (x_0€x)}
-         {(x_0€x)} => {(x_0€x)}
- Second subcase:
-         {} => {(xSx)}
-         {} => {(!(x_0€x)|(x_0€x))}
-         {} => {!(x_0€x), (x_0€x)}
-         {(x_0€x)} => {(x_0€x)}
+ {} => {(xS(xUy))}
+ {} => {(!(x_0€x)|(x_0€(xUy)))}
+ {} => {!(x_0€x), (x_0€(xUy))}
+ {(x_0€x)} => {(x_0€(xUy))}
+ {(x_0€x)} => {((x_0€x)|(x_0€y))}
+ {(x_0€x)} => {(x_0€x), (x_0€y)}
  ```
  Note that the prover stopped in both of the subcases because it encountered a clear tautology: if x_0 is a member of x, then x_0 is a member of x.
 
@@ -42,83 +36,81 @@
  {((CxSCy)&(CySCx))} => {((xSy)&(ySx))}
  {(CxSCy), (CySCx)} => {((xSy)&(ySx))}
  First subcase:
-         {(CxSCy), (CySCx)} => {(xSy)}
-         {(CxSCy), (CySCx)} => {(!(x_0€x)|(x_0€y))}
-         {(CxSCy), (CySCx)} => {!(x_0€x), (x_0€y)}
-         {(CxSCy), (CySCx), (x_0€x)} => {(x_0€y)}
-         Expanding with variables ['y', 'x_0']:
-                 {(x_0€x), (!(y€Cx)|(y€Cy)), (!(x_0€Cy)|(x_0€Cx))} => {(x_0€y)}
-                 First subcase:
-                         {(x_0€x), (!(x_0€Cy)|(x_0€Cx)), !(y€Cx)} => {(x_0€y)}
-                         {(x_0€x), (!(x_0€Cy)|(x_0€Cx)), !(y€Cx)} => {(x_0€y)}
-                         {(x_0€x), (!(x_0€Cy)|(x_0€Cx))} => {(x_0€y), (y€Cx)}
-                         First subcase:
-                                 {(x_0€x), !(x_0€Cy)} => {(x_0€y), (y€Cx)}
-                                 {(x_0€x), !(x_0€Cy)} => {(x_0€y), (y€Cx)}
-                                 {(x_0€x)} => {(x_0€y), (y€Cx), (x_0€Cy)}
-                                 {(x_0€x)} => {(x_0€y), (y€Cx), !(x_0€y)}
-                                 {(x_0€x), (x_0€y)} => {(x_0€y), (y€Cx)}
-                         Second subcase:
-                                 {(x_0€x), (x_0€Cx)} => {(x_0€y), (y€Cx)}
-                                 {(x_0€x), (x_0€Cx)} => {(x_0€y), (y€Cx)}
-                                 {(x_0€x), (x_0€Cx)} => {(x_0€y), !(y€x)}
-                                 {(x_0€x), (x_0€Cx), (y€x)} => {(x_0€y)}
-                                 {(x_0€x), (y€x), !(x_0€x)} => {(x_0€y)}
-                                 {(x_0€x), (y€x)} => {(x_0€y), (x_0€x)}
-                 Second subcase:
-                         {(x_0€x), (!(x_0€Cy)|(x_0€Cx)), (y€Cy)} => {(x_0€y)}
-                         {(x_0€x), (!(x_0€Cy)|(x_0€Cx)), (y€Cy)} => {(x_0€y)}
-                         First subcase:
-                                 {(x_0€x), (y€Cy), !(x_0€Cy)} => {(x_0€y)}
-                                 {(x_0€x), (y€Cy), !(x_0€Cy)} => {(x_0€y)}
-                                 {(x_0€x), (y€Cy)} => {(x_0€y), (x_0€Cy)}
-                                 {(x_0€x), (y€Cy)} => {(x_0€y), !(x_0€y)}
-                                 {(x_0€x), (y€Cy), (x_0€y)} => {(x_0€y)}
-                         Second subcase:
-                                 {(x_0€x), (y€Cy), (x_0€Cx)} => {(x_0€y)}
-                                 {(x_0€x), (y€Cy), (x_0€Cx)} => {(x_0€y)}
-                                 {(x_0€x), (y€Cy), !(x_0€x)} => {(x_0€y)}
-                                 {(x_0€x), (y€Cy)} => {(x_0€y), (x_0€x)}
+        Expanding with variables ['y', 'x_0']:
+                {(x_0€x), (!(y€Cx)|(y€Cy)), (!(x_0€Cy)|(x_0€Cx))} => {(x_0€y)}
+                First subcase:
+                        {(x_0€x), (!(x_0€Cy)|(x_0€Cx)), !(y€Cx)} => {(x_0€y)}
+                        {(x_0€x), (!(x_0€Cy)|(x_0€Cx)), !(y€Cx)} => {(x_0€y)}
+                        {(x_0€x), (!(x_0€Cy)|(x_0€Cx))} => {(x_0€y), (y€Cx)}
+                        First subcase:
+                                {(x_0€x), !(x_0€Cy)} => {(x_0€y), (y€Cx)}
+                                {(x_0€x), !(x_0€Cy)} => {(x_0€y), (y€Cx)}
+                                {(x_0€x)} => {(x_0€y), (y€Cx), (x_0€Cy)}
+                                {(x_0€x)} => {(x_0€y), (y€Cx), !(x_0€y)}
+                                {(x_0€x), (x_0€y)} => {(x_0€y), (y€Cx)}
+                        Second subcase:
+                                {(x_0€x), (x_0€Cx)} => {(x_0€y), (y€Cx)}
+                                {(x_0€x), (x_0€Cx)} => {(x_0€y), (y€Cx)}
+                                {(x_0€x), (x_0€Cx)} => {(x_0€y), !(y€x)}
+                                {(x_0€x), (x_0€Cx), (y€x)} => {(x_0€y)}
+                                {(x_0€x), (y€x), !(x_0€x)} => {(x_0€y)}
+                                {(x_0€x), (y€x)} => {(x_0€y), (x_0€x)}
+                Second subcase:
+                        {(x_0€x), (!(x_0€Cy)|(x_0€Cx)), (y€Cy)} => {(x_0€y)}
+                        {(x_0€x), (!(x_0€Cy)|(x_0€Cx)), (y€Cy)} => {(x_0€y)}
+                        First subcase:
+                                {(x_0€x), (y€Cy), !(x_0€Cy)} => {(x_0€y)}
+                                {(x_0€x), (y€Cy), !(x_0€Cy)} => {(x_0€y)}
+                                {(x_0€x), (y€Cy)} => {(x_0€y), (x_0€Cy)}
+                                {(x_0€x), (y€Cy)} => {(x_0€y), !(x_0€y)}
+                                {(x_0€x), (y€Cy), (x_0€y)} => {(x_0€y)}
+                        Second subcase:
+                                {(x_0€x), (y€Cy), (x_0€Cx)} => {(x_0€y)}
+                                {(x_0€x), (y€Cy), (x_0€Cx)} => {(x_0€y)}
+                                {(x_0€x), (y€Cy), !(x_0€x)} => {(x_0€y)}
+                                {(x_0€x), (y€Cy)} => {(x_0€y), (x_0€x)}
  Second subcase:
-         {(CxSCy), (CySCx)} => {(ySx)}
-         {(CxSCy), (CySCx)} => {(!(x_0€y)|(x_0€x))}
-         {(CxSCy), (CySCx)} => {!(x_0€y), (x_0€x)}
-         {(CxSCy), (CySCx), (x_0€y)} => {(x_0€x)}
-         Expanding with variables ['x_0', 'y']:
-                 {(x_0€y), (!(x_0€Cx)|(x_0€Cy)), (!(y€Cy)|(y€Cx))} => {(x_0€x)}
-                 First subcase:
-                         {(x_0€y), (!(y€Cy)|(y€Cx)), !(x_0€Cx)} => {(x_0€x)}
-                         {(x_0€y), (!(y€Cy)|(y€Cx)), !(x_0€Cx)} => {(x_0€x)}
-                         {(x_0€y), (!(y€Cy)|(y€Cx))} => {(x_0€x), (x_0€Cx)}
-                         First subcase:
-                                 {(x_0€y), !(y€Cy)} => {(x_0€x), (x_0€Cx)}
-                                 {(x_0€y), !(y€Cy)} => {(x_0€x), (x_0€Cx)}
-                                 {(x_0€y)} => {(x_0€x), (x_0€Cx), (y€Cy)}
-                                 {(x_0€y)} => {(x_0€x), (x_0€Cx), !(y€y)}
-                                 {(x_0€y), (y€y)} => {(x_0€x), (x_0€Cx)}
-                                 {(x_0€y), (y€y)} => {(x_0€x), !(x_0€x)}
-                                 {(x_0€y), (y€y), (x_0€x)} => {(x_0€x)}
-                         Second subcase:
-                                 {(x_0€y), (y€Cx)} => {(x_0€x), (x_0€Cx)}
-                                 {(x_0€y), (y€Cx)} => {(x_0€x), (x_0€Cx)}
-                 Second subcase:
-                         {(x_0€y), (!(y€Cy)|(y€Cx)), (x_0€Cy)} => {(x_0€x)}
-                         {(x_0€y), (!(y€Cy)|(y€Cx)), (x_0€Cy)} => {(x_0€x)}
-                         First subcase:
-                                 {(x_0€y), (x_0€Cy), !(y€Cy)} => {(x_0€x)}
-                                 {(x_0€y), (x_0€Cy), !(y€Cy)} => {(x_0€x)}
-                                 {(x_0€y), (x_0€Cy)} => {(x_0€x), (y€Cy)}
-                                 {(x_0€y), (x_0€Cy)} => {(x_0€x), !(y€y)}
-                                 {(x_0€y), (x_0€Cy), (y€y)} => {(x_0€x)}
-                                 {(x_0€y), (y€y), !(x_0€y)} => {(x_0€x)}
-                                 {(x_0€y), (y€y)} => {(x_0€x), (x_0€y)}
-                         Second subcase:
-                                 {(x_0€y), (x_0€Cy), (y€Cx)} => {(x_0€x)}
-                                 {(x_0€y), (x_0€Cy), (y€Cx)} => {(x_0€x)}
-                                 {(x_0€y), (x_0€Cy), !(y€x)} => {(x_0€x)}
-                                 {(x_0€y), (x_0€Cy)} => {(x_0€x), (y€x)}
-                                 {(x_0€y), !(x_0€y)} => {(x_0€x), (y€x)}
-                                 {(x_0€y)} => {(x_0€x), (y€x), (x_0€y)}
+        {(CxSCy), (CySCx)} => {(ySx)}
+        {(CxSCy), (CySCx)} => {(!(x_0€y)|(x_0€x))}
+        {(CxSCy), (CySCx)} => {!(x_0€y), (x_0€x)}
+        {(CxSCy), (CySCx), (x_0€y)} => {(x_0€x)}
+        Expanding with variables ['x_0', 'y']:
+                {(x_0€y), (!(x_0€Cx)|(x_0€Cy)), (!(y€Cy)|(y€Cx))} => {(x_0€x)}
+                First subcase:
+                        {(x_0€y), (!(y€Cy)|(y€Cx)), !(x_0€Cx)} => {(x_0€x)}
+                        {(x_0€y), (!(y€Cy)|(y€Cx)), !(x_0€Cx)} => {(x_0€x)}
+                        {(x_0€y), (!(y€Cy)|(y€Cx))} => {(x_0€x), (x_0€Cx)}
+                        First subcase:
+                                {(x_0€y), !(y€Cy)} => {(x_0€x), (x_0€Cx)}
+                                {(x_0€y), !(y€Cy)} => {(x_0€x), (x_0€Cx)}
+                                {(x_0€y)} => {(x_0€x), (x_0€Cx), (y€Cy)}
+                                {(x_0€y)} => {(x_0€x), (x_0€Cx), !(y€y)}
+                                {(x_0€y), (y€y)} => {(x_0€x), (x_0€Cx)}
+                                {(x_0€y), (y€y)} => {(x_0€x), !(x_0€x)}
+                                {(x_0€y), (y€y), (x_0€x)} => {(x_0€x)}
+                        Second subcase:
+                                {(x_0€y), (y€Cx)} => {(x_0€x), (x_0€Cx)}
+                                {(x_0€y), (y€Cx)} => {(x_0€x), (x_0€Cx)}
+                                {(x_0€y), (y€Cx)} => {(x_0€x), !(x_0€x)}
+                                {(x_0€y), (y€Cx), (x_0€x)} => {(x_0€x)}
+                Second subcase:
+                        {(x_0€y), (!(y€Cy)|(y€Cx)), (x_0€Cy)} => {(x_0€x)}
+                        {(x_0€y), (!(y€Cy)|(y€Cx)), (x_0€Cy)} => {(x_0€x)}
+                        First subcase:
+                                {(x_0€y), (x_0€Cy), !(y€Cy)} => {(x_0€x)}
+                                {(x_0€y), (x_0€Cy), !(y€Cy)} => {(x_0€x)}
+                                {(x_0€y), (x_0€Cy)} => {(x_0€x), (y€Cy)}
+                                {(x_0€y), (x_0€Cy)} => {(x_0€x), !(y€y)}
+                                {(x_0€y), (x_0€Cy), (y€y)} => {(x_0€x)}
+                                {(x_0€y), (y€y), !(x_0€y)} => {(x_0€x)}
+                                {(x_0€y), (y€y)} => {(x_0€x), (x_0€y)}
+                        Second subcase:
+                                {(x_0€y), (x_0€Cy), (y€Cx)} => {(x_0€x)}
+                                {(x_0€y), (x_0€Cy), (y€Cx)} => {(x_0€x)}
+                                {(x_0€y), (x_0€Cy), !(y€x)} => {(x_0€x)}
+                                {(x_0€y), (x_0€Cy)} => {(x_0€x), (y€x)}
+                                {(x_0€y), !(x_0€y)} => {(x_0€x), (y€x)}
+                                {(x_0€y)} => {(x_0€x), (y€x), (x_0€y)}
  ```
  For clearness, the above proof does not show the backtracking that ATPEST had to do.
 
@@ -131,19 +123,19 @@
  {((xSy)&(ySx))} => {((PxSPy)&(PySPx))}
  {(xSy), (ySx)} => {((PxSPy)&(PySPx))}
  First subcase:
-         {(xSy), (ySx)} => {(PxSPy)}
-         {(xSy), (ySx)} => {(!(x_0€Px)|(x_0€Py))}
-         {(xSy), (ySx)} => {!(x_0€Px), (x_0€Py)}
-         {(xSy), (ySx), (x_0€Px)} => {(x_0€Py)}
-         {(xSy), (ySx), (x_0€Px)} => {(x_0Sy)}
-         {(xSy), (ySx), (x_0Sx)} => {(x_0Sy)}
+        {(xSy), (ySx)} => {(PxSPy)}
+        {(xSy), (ySx)} => {(!(x_0€Px)|(x_0€Py))}
+        {(xSy), (ySx)} => {!(x_0€Px), (x_0€Py)}
+        {(xSy), (ySx), (x_0€Px)} => {(x_0€Py)}
+        {(xSy), (ySx), (x_0€Px)} => {(x_0Sy)}
+        {(xSy), (ySx), (x_0Sx)} => {(x_0Sy)}
  Second subcase:
-         {(xSy), (ySx)} => {(PySPx)}
-         {(xSy), (ySx)} => {(!(x_0€Py)|(x_0€Px))}
-         {(xSy), (ySx)} => {!(x_0€Py), (x_0€Px)}
-         {(xSy), (ySx), (x_0€Py)} => {(x_0€Px)}
-         {(xSy), (ySx), (x_0€Py)} => {(x_0Sx)}
-         {(xSy), (ySx), (x_0Sy)} => {(x_0Sx)}
+        {(xSy), (ySx)} => {(PySPx)}
+        {(xSy), (ySx)} => {(!(x_0€Py)|(x_0€Px))}
+        {(xSy), (ySx)} => {!(x_0€Py), (x_0€Px)}
+        {(xSy), (ySx), (x_0€Py)} => {(x_0€Px)}
+        {(xSy), (ySx), (x_0€Py)} => {(x_0Sx)}
+        {(xSy), (ySx), (x_0Sy)} => {(x_0Sx)}
  ```
  The prover stopped in the first subcase, because it realized that since x_0 is a subset of x, and x is a subset of y, it can conclude that x_0 is a subset of y, which is
  what it had to prove. On the other hand, the prover stopped in the second subcase, because it realized that if x_0 is a subset of y, and y is a subset of x, then x_0
