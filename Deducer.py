@@ -692,14 +692,25 @@ class Deducer:
 
 		# Try to expand existential and universal quantifiers, where the expansion is easy, i.e.
 		# the variable needs to be a fresh one.
-		result = self.expandExistentialQuantificationInAssumptions() or self.expandUniversalQuantificationInConclusions()
-		if result == True:
+		if self.expandExistentialQuantificationInAssumptions() == True:
 			# We have expanded quantifiers, so try to prove the claim
 			# in the new situation.
 			valid = self.prove()
 			if valid == True:
 				# We succeeded in proving the claim.
 				return True
+			else:
+				return False
+
+		if self.expandUniversalQuantificationInConclusions() == True:
+			# We have expanded quantifiers, so try to prove the claim
+			# in the new situation.
+			valid = self.prove()
+			if valid == True:
+				# We succeeded in proving the claim.
+				return True
+			else:
+				return False
 
 		# Try to then consider different ways of expanding universal and existential quantifiers.
 		# First, try to expand universal quantifiers in assumptions.
