@@ -370,6 +370,7 @@ class Deducer:
 				deducer2 = Deducer(self.assumptions.copy(), conclusions2, self.depth + 1)
 
 				# Run the deducer.
+				print(self.depth * '\t' + f'Expanding conjunction in conclusions.')
 				print(self.depth * '\t' + f'First subcase:')
 				result1 = deducer1.prove()
 				if result1 == False:
@@ -399,6 +400,7 @@ class Deducer:
 				deducer2 = Deducer(assumptions2, conclusions2, self.depth + 1)
 
 				# Run the deducers.
+				print(self.depth * '\t' + f'Expanding equivalence in conclusions.')
 				print(self.depth * '\t' + f'First subcase:')
 				deducer1.printStatus()
 				result1 = deducer1.prove()
@@ -426,6 +428,7 @@ class Deducer:
 				deducer2 = Deducer(assumptions2, self.conclusions.copy(), self.depth + 1)
 
 				# Run the deducers.
+				print(self.depth * '\t' + f'Expanding disjunction in assumptions.')
 				print(self.depth * '\t' + f'First subcase:')
 				deducer1.printStatus()
 				result1 = deducer1.prove()
@@ -453,6 +456,7 @@ class Deducer:
 				deducer2 = Deducer(assumptions2, self.conclusions.copy(), self.depth + 1)
 
 				# Run the deducers.
+				print(self.depth * '\t' + f'Expanding implication in assumptions.')
 				print(self.depth * '\t' + f'First subcase:')
 				deducer1.printStatus()
 				result1 = deducer1.prove()
@@ -482,6 +486,7 @@ class Deducer:
 				deducer2 = Deducer(assumptions2, conclusions2, self.depth + 1)
 
 				# Run the deducers.
+				print(self.depth * '\t' + f'Expanding equivalence in conclusions.')
 				print(self.depth * '\t' + f'First subcase:')
 				deducer1.printStatus()
 				result1 = deducer1.prove()
