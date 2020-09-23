@@ -329,11 +329,11 @@ class SetTheoryParser:
 		elif operator == '->':
 			operand1 = self.output.pop()
 			operand2 = self.output.pop()
-			self.output.append(PropDisjunction(PropNegation(operand2), operand1))
+			self.output.append(PropImplication(operand2, operand1))
 		elif operator == '<->':
 			operand1 = self.output.pop()
 			operand2 = self.output.pop()
-			self.output.append(PropConjunction(PropDisjunction(PropNegation(operand2), operand1),PropDisjunction(PropNegation(operand1), operand2)))
+			self.output.append(PropEquivalence(operand2, operand1))
 		else:
 			raise Exception('Error: When adding a new operator, unexpected operator occured.')
 

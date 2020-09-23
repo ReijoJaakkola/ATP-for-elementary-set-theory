@@ -1,5 +1,5 @@
 from Utils import combinations, transitiveClosure
-from PropositionalSentences import CONNECTIVES, PropVariable, PropNegation, PropConjunction, PropDisjunction
+from PropositionalSentences import CONNECTIVES, PropVariable, PropNegation, PropConjunction, PropDisjunction, PropImplication, PropEquivalence
 from FirstOrderSentences import QUANTIFIERS, ExistentialQuantifier, UniversalQuantifier
 from SetTheorySentences import SETOPERATIONS, Set, SetMember, SetSubset, SetComplement, SetUnion, SetIntersection, SetEquality, SetPowerset, SetDifference
 
@@ -36,6 +36,10 @@ def calculateVariables(claim):
 		return calculateVariables(claim.subformula1).union(calculateVariables(claim.subformula2))
 	elif claim.type == CONNECTIVES.OR:
 		return calculateVariables(claim.subformula1).union(calculateVariables(claim.subformula2))
+	elif claim.type == CONNECTIVES.IMPLICATION:
+		return calculateVariables(claim.subformula1).union(calculateVariables(claim.subformula2))
+	elif claim.type == CONNECTIVES.EQUIVALENCE:
+		return calculateVariables(claim.subformula1).union(calculateVariables(claim.subformula2))
 	elif claim.type == QUANTIFIERS.EXISTENTIAL:
 		return calculateVariables(claim.subformula)
 	elif claim.type == QUANTIFIERS.UNIVERSAL:
@@ -71,6 +75,10 @@ def substituteVariable(variable1, variable2, claim):
 		return PropConjunction(substituteVariable(variable1, variable2, claim.subformula1), substituteVariable(variable1, variable2, claim.subformula2))
 	elif claim.type == CONNECTIVES.OR:
 		return PropDisjunction(substituteVariable(variable1, variable2, claim.subformula1), substituteVariable(variable1, variable2, claim.subformula2))
+	elif claim.type == CONNECTIVES.IMPLICATION:
+		return PropImplication(substituteVariable(variable1, variable2, claim.subformula1), substituteVariable(variable1, variable2, claim.subformula2))
+	elif claim.type == CONNECTIVES.EQUIVALENCE:
+		return PropEquivalence(substituteVariable(variable1, variable2, claim.subformula1), substituteVariable(variable1, variable2, claim.subformula2))
 	elif claim.type == QUANTIFIERS.EXISTENTIAL:
 		if variable1 == claim.variable:
 			return claim
@@ -246,6 +254,10 @@ class Deducer:
 			return self.complexity(claim.subformula1) + self.complexity(claim.subformula2)
 		elif claim.type == CONNECTIVES.OR:
 			return self.complexity(claim.subformula1) + self.complexity(claim.subformula2)
+		elif claim.type == CONNECTIVES.IMPLICATION:
+			return self.complexity(claim.subformula1) + self.complexity(claim.subformula2)
+		elif claim.type == CONNECTIVES.EQUIVALENCE:
+			return self.complexity(claim.subformula1) + self.complexity(claim.subformula2)
 		elif claim.type == QUANTIFIERS.EXISTENTIAL:
 			return self.complexity(claim.subformula)
 		elif claim.type == QUANTIFIERS.UNIVERSAL:
@@ -329,6 +341,14 @@ class Deducer:
 				self.conclusions.remove(conclusion)
 				# Return true to indicate success.
 				return True
+			elif conclusion.type == CONNECTIVES.IMPLICATION:
+				# Add the first subformula to assumptions and the
+				# second subformula to conclusions.
+				self.assumptions.append(conclusion.subformula1)
+				self.conclusions.append(conclusion.subformula2)
+				self.conclusions.remove(conclusion)
+				# Return true to indicate success.
+				return True
 
 		# Failed to expand definitions, return false to indicate this.
 		return False
@@ -358,6 +378,37 @@ class Deducer:
 				print(self.depth * '\t' + f'Second subcase:')
 				result2 = deducer2.prove()
 				return result2
+			if conclusion.type == CONNECTIVES.EQUIVALENCE:
+				# Two cases: Add either the first subformula to
+				# assumptions and the second one to conclusions,
+				# or do the vice-versa.
+				assumptions1 = self.assumptions.copy()
+				assumptions1.append(conclusion.subformula1)
+				conclusions1 = self.conclusions.copy()
+				conclusions1.remove(conclusion)
+				conclusions1.append(conclusion.subformula2)
+
+				assumptions2 = self.assumptions.copy()
+				assumptions2.append(conclusion.subformula2)
+				conclusions2 = self.conclusions.copy()
+				conclusions2.remove(conclusion)
+				conclusions2.append(conclusion.subformula1)
+
+				# Initialize the deducers for the two different cases.
+				deducer1 = Deducer(assumptions1, conclusions1, self.depth + 1)
+				deducer2 = Deducer(assumptions2, conclusions2, self.depth + 1)
+
+				# Run the deducers.
+				print(self.depth * '\t' + f'First subcase:')
+				deducer1.printStatus()
+				result1 = deducer1.prove()
+				if result1 == False:
+					return False
+
+				print(self.depth * '\t' + f'Second subcase:')
+				deducer2.printStatus()
+				result2 = deducer2.prove()
+				return result2
 
 		# Next, try to find an assumption that could be expanded.
 		for assumption in self.assumptions:
@@ -373,6 +424,62 @@ class Deducer:
 				# Initialize two deducers for the different cases.
 				deducer1 = Deducer(assumptions1, self.conclusions.copy(), self.depth + 1)
 				deducer2 = Deducer(assumptions2, self.conclusions.copy(), self.depth + 1)
+
+				# Run the deducers.
+				print(self.depth * '\t' + f'First subcase:')
+				deducer1.printStatus()
+				result1 = deducer1.prove()
+				if result1 == False:
+					return False
+
+				print(self.depth * '\t' + f'Second subcase:')
+				deducer2.printStatus()
+				result2 = deducer2.prove()
+				return result2
+			if assumption.type == CONNECTIVES.IMPLICATION:
+				# Two cases: add first subformula to conclusions
+				# or add second subformula to assumptions.
+				assumptions1 = self.assumptions.copy()
+				conclusions1 = self.conclusions.copy()
+				assumptions1.remove(assumption)
+				conclusions1.append(assumption.subformula1)
+
+				assumptions2 = self.assumptions.copy()
+				assumptions2.remove(assumption)
+				assumptions2.append(assumption.subformula2)
+
+				# Initialize the deducers for the two different cases.
+				deducer1 = Deducer(assumptions1, conclusions1, self.depth + 1)
+				deducer2 = Deducer(assumptions2, self.conclusions.copy(), self.depth + 1)
+
+				# Run the deducers.
+				print(self.depth * '\t' + f'First subcase:')
+				deducer1.printStatus()
+				result1 = deducer1.prove()
+				if result1 == False:
+					return False
+
+				print(self.depth * '\t' + f'Second subcase:')
+				deducer2.printStatus()
+				result2 = deducer2.prove()
+				return result2
+			if assumption.type == CONNECTIVES.EQUIVALENCE:
+				# Two cases: add both subformulas to assumptions
+				# or add both formulas to conclusions.
+				assumptions1 = self.assumptions.copy()
+				assumptions1.remove(assumption)
+				assumptions1.append(assumption.subformula1)
+				assumptions1.append(assumption.subformula2)
+
+				assumptions2 = self.assumptions.copy()
+				assumptions2.remove(assumption)
+				conclusions2 = self.conclusions.copy()
+				conclusions2.append(assumption.subformula1)
+				conclusions2.append(assumption.subformula2)
+
+				# Initialize the deducers for the two different cases.
+				deducer1 = Deducer(assumptions1, self.conclusions.copy(), self.depth + 1)
+				deducer2 = Deducer(assumptions2, conclusions2, self.depth + 1)
 
 				# Run the deducers.
 				print(self.depth * '\t' + f'First subcase:')
@@ -564,7 +671,7 @@ class Deducer:
 			reservedVariables = reservedVariables.union({freshVariable})
 
 			self.conclusions.remove(conclusion)
-			self.conclusions.append(PropDisjunction(PropNegation(SetMember(Set(freshVariable), conclusion.set1)),SetMember(Set(freshVariable), conclusion.set2)))
+			self.conclusions.append(PropImplication(SetMember(Set(freshVariable), conclusion.set1),SetMember(Set(freshVariable), conclusion.set2)))
 
 		return True
 
@@ -601,7 +708,7 @@ class Deducer:
 			
 			for i in range(len(relevantAssumptions)):
 				assumptionsCopy.remove(relevantAssumptions[i])
-				assumptionsCopy.append(PropDisjunction(PropNegation(SetMember(Set(combination[i]), relevantAssumptions[i].set1)),SetMember(Set(combination[i]), relevantAssumptions[i].set2)))
+				assumptionsCopy.append(PropImplication(SetMember(Set(combination[i]), relevantAssumptions[i].set1),SetMember(Set(combination[i]), relevantAssumptions[i].set2)))
 			
 			# Initialize a deducer for this case.
 			deducer = Deducer(assumptionsCopy, self.conclusions.copy(), self.depth + 1)
