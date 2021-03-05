@@ -5,7 +5,7 @@
  sequent calculus without contraction rule. This means that each assumption of the form QxD, where Q is a quantifier and D is a formula of set-theory,
  can be used only once. The following formula is an example of a statement which this prover can't prove.
  ```
- AzEx[(x € z) -> Ay(y € z)]
+ AzEx[[x € z] -> Ay[y € z]]
  ```
  
  We have two kinds of formulas, the first being the set-formulas.
