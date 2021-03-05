@@ -1,7 +1,12 @@
 # ATP for elementary set theory
  Automated theorem prover for elementary set theory (ATPEST).
  
- The goal for ATPEST is to be able to prove first-order statements about sets.
+ The goal for ATPEST is to be able to prove first-order statements about sets. The prover is not complete, since it uses essentially a version of
+ sequent calculus without contraction rule. This means that each assumption of the form QxD, where Q is a quantifier and D is a formula of set-theory,
+ can be used only once. The following formula is an example of a statement which this prover can't prove is given below.
+ ```
+ AzEx[(x € z) -> Ay(y € z)]
+ ```
  
  We have two kinds of formulas, the first being the set-formulas.
  B ::= x | CB | B U B | B I B | PB | B \ B
