@@ -3,7 +3,7 @@
  
  The goal for ATPEST is to be able to prove first-order statements about sets. The prover is not complete, since it uses essentially a version of
  sequent calculus without contraction rule. This means that each assumption of the form QxD, where Q is a quantifier and D is a formula of set-theory,
- can be used only once. The following formula is an example of a statement which this prover can't prove is given below.
+ can be used only once. The following formula is an example of a statement which this prover can't prove.
  ```
  AzEx[(x € z) -> Ay(y € z)]
  ```
